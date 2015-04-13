@@ -1,0 +1,35 @@
+﻿<form class="form-horizontal">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h5>Execute</h5>
+        </div>
+        <div class="panel-body">
+            <div class="form-group">
+                <label for="Name" class="control-label col-sm-3">Name</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" id="Name" ng-model="Input.Name" placeholder="Stored Procedure Name" />
+                </div>
+            </div>
+            <div ng-repeat="Parameter in Input.Parameters" class="form-group">
+                <div class="col-sm-3">
+                    <input type="text" class="form-control" ng-model="Parameter.Name" placeholder="Parameter Name" />
+                </div>
+                <div class="col-sm-9">
+                    <div class="input-group">
+                        <input type="text" class="form-control" ng-model="Parameter.Value" placeholder="Parameter Value" />
+                        <span class="input-group-btn">
+                            <button class="btn btn-danger" ng-click="Input.Parameters.splice(Input.Parameters.indexOf(Parameter), 1)">Remove</button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel-footer">
+            <button class="btn btn-primary" ng-click="Input.Parameters.push({ Name: '', Value: '' })">Add Parameter</button>
+            <button class="btn btn-success" ng-click="Exec()">Execute</button>
+        </div>
+    </div>
+
+</form>
+<pre>{{Input}}</pre>
+<pre>{{Output}}</pre>
