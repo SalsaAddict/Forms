@@ -5,12 +5,30 @@
         </div>
         <div class="panel-body">
             <div class="form-group">
-                <label for="Name" class="control-label col-sm-3">Name</label>
+                <label for="Handler" class="control-label col-sm-3">Handler</label>
                 <div class="col-sm-9">
-                    <input type="text" class="form-control" id="Name" ng-model="Input.Name" placeholder="Stored Procedure Name" />
+                    <select class="form-control" ng-model="$storage.Handler">
+                        <option value="exec.ashx">Exec</option>
+                        <option value="read.ashx">Read</option>
+                    </select>
                 </div>
             </div>
-            <div ng-repeat="Parameter in Input.Parameters" class="form-group">
+            <div class="form-group">
+                <label for="Name" class="control-label col-sm-3">Name</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" id="Name" ng-model="$storage.Input.Name" placeholder="Stored Procedure Name" />
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-9 col-sm-offset-3">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" ng-model="$storage.RX" /> Returns XML
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div ng-repeat="Parameter in $storage.Input.Parameters" class="form-group">
                 <div class="col-sm-3">
                     <input type="text" class="form-control" ng-model="Parameter.Name" placeholder="Parameter Name" />
                 </div>
@@ -25,7 +43,7 @@
             </div>
         </div>
         <div class="panel-footer">
-            <button class="btn btn-primary" ng-click="Input.Parameters.push({ Name: '', Value: '' })">Add Parameter</button>
+            <button class="btn btn-primary" ng-click="$storage.Input.Parameters.push({ Name: '', Value: '' })">Add Parameter</button>
             <button class="btn btn-success" ng-click="Exec()">Execute</button>
         </div>
     </div>
