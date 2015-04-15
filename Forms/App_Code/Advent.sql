@@ -1,3 +1,4 @@
+--USE [master]; DROP DATABASE [Claimsuite]; CREATE DATABASE [Claimsuite]
 USE [Claimsuite]
 GO
 

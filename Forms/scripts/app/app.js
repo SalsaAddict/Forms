@@ -28,31 +28,42 @@ myApp.config(function ($routeProvider) {
         .otherwise({ redirectTo: "/home" });
 });
 
-myApp.controller("EntitiesController", ["$scope", "$http", function ($scope, $http) {
+myApp.service("FormService", ["$http", function ($http) {
 
-    $scope.Entities = [];
-
-    $http.post("exec.ashx?rx=true", { Name: "pr_Entities" })
-        .success(function (Response) {
-            $scope.Entities = Response.Root.Entities;
+    this.Execute = function (Name, Parameters, ReturnsXML) {
+        var NVArray = [], XML = null;
+        angular.forEach(Parameters, function (Value, Key) {
+            if (Key == "XML")
+                XML = Value;
+            else
+                NVArray.push({ Name: Key, Value: Value });
         });
+        return $http.post("exec.ashx?rx=" + !(ReturnsXML !== true), { Name: Name, Parameters: NVArray, XML: XML });
+    };
 
 }]);
 
-myApp.controller("EntityController", ["$scope", "$routeParams", "$http", function ($scope, $routeParams, $http) {
+myApp.controller("EntitiesController", ["$scope", "FormService", function ($scope, FormService) {
+
+    $scope.Entities = [];
+
+    FormService.Execute("pr_Entities", null, true).success(function (Response) { $scope.Entities = Response.Root.Entities; });
+
+}]);
+
+myApp.controller("EntityController", ["$scope", "$routeParams", "FormService", function ($scope, $routeParams, FormService) {
 
     $scope.Entity = {};
 
     $scope.Load = function (EntityId) {
-        $http.post("exec.ashx?rx=true", { Name: "pr_Entity", Parameters: [{ Name: "Id", Value: EntityId }] })
+        FormService.Execute("pr_Entity", { Id: EntityId }, true)
             .success(function (Response) {
                 $scope.Entity = Response.Entity;
             });
     };
 
     $scope.Save = function () {
-        var EntityId = $scope.Entity.Id;
-        $http.post("exec.ashx?rx=true", { Name: "pr_Entity_Save", XML: { Entity: $scope.Entity } })
+        FormService.Execute("pr_Entity_Save", { XML: { Entity: $scope.Entity } }, true)
             .success(function (Response) {
                 $scope.Entity = Response.Entity;
             })
@@ -62,7 +73,5 @@ myApp.controller("EntityController", ["$scope", "$routeParams", "$http", functio
     };
 
     if ($routeParams.EntityId) { $scope.Load($routeParams.EntityId); };
-
-
 
 }]);
