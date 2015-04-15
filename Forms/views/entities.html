@@ -1,0 +1,18 @@
+﻿<div class="panel panel-default">
+    <div class="panel-heading">
+        <div class="row">
+            <div class="col-sm-7">
+                <h4>Entities</h4>
+            </div>
+            <div class="col-sm-5">
+                <input type="text" class="form-control" ng-model="Search" placeholder="Search&hellip;" />
+            </div>
+        </div>
+    </div>
+    <div class="list-group">
+        <a href="#/entity" class="list-group-item">
+            <span class="text-info"><i>New Entity&hellip;</i></span>
+        </a>
+        <a href="#/entity/{{Entity.Id}}" class="list-group-item" ng-repeat="Entity in Entities | filter : {Name: Search}">{{Entity.Name}}</a>
+    </div>
+</div>

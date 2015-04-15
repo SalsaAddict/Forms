@@ -104,6 +104,7 @@ namespace Forms
                         Context.Response.Clear();
                         Context.Response.ContentType = "text/plain";
                         Context.Response.Write(ex.Message);
+                        Context.Response.StatusCode = 500;
                         Context.Response.End();
                     }
                 }

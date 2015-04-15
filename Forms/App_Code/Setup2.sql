@@ -113,6 +113,23 @@ CREATE TABLE [UiFormList] (
 	)
 GO
 
+CREATE TABLE [UiRouteType] (
+  [Type] NVARCHAR(10) NOT NULL,
+		CONSTRAINT [PK_UiRouteType] PRIMARY KEY CLUSTERED ([Type])
+ )
+GO
+
+INSERT INTO [UiRouteType] ([Type])
+VALUES
+ (N'UiForm')
+GO
+
+CREATE TABLE [UiRoute] (
+  [Route] NVARCHAR(255) NOT NULL,
+		[Type] NVARCHAR(10) NOT NULL,
+		[New] BIT NOT NULL
+		
+
 CREATE PROCEDURE [pr_UiRoutes]
 AS
 BEGIN

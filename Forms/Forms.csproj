@@ -84,6 +84,9 @@
     <Content Include="bin\Newtonsoft.Json.xml" />
     <Content Include="css\bootstrap.min.css" />
     <Content Include="css\font-awesome.min.css" />
+    <Content Include="scripts\app\app - Copy.js" />
+    <Content Include="views\entities.html" />
+    <Content Include="views\entity.html" />
     <Content Include="views\exec.html" />
     <Content Include="fonts\fontawesome-webfont.svg" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
