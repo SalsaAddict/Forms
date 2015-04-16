@@ -1,23 +1,27 @@
-﻿<div class="panel panel-default">
-    <div class="panel-heading">
-        <div class="row">
-            <div class="col-sm-7">
-                <h4 class="text-info">Entities</h4>
-            </div>
-            <div class="col-sm-5">
-                <input type="text" class="form-control" ng-model="Search" placeholder="Search&hellip;" />
+﻿<pah>
+    <pah-dataset name="Entities" source="pr_Entities"></pah-dataset>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <div class="row">
+                <div class="col-sm-7">
+                    <h4 class="text-info">Entities</h4>
+                </div>
+                <div class="col-sm-5">
+                    <input type="text" class="form-control" ng-model="Search" placeholder="Search&hellip;" />
+                </div>
             </div>
         </div>
+        <div class="list-group">
+            <a href="#/entity" class="list-group-item">
+                <span class="text-info">
+                    <i class="fa fa-plus-circle"></i>
+                    New Entity&hellip;
+                </span>
+            </a>
+            <a href="#/entity/{{Entity.Id}}" class="list-group-item" ng-repeat="Entity in Dataset('Entities') | filter : {Name: Search}">
+                <h4 class="list-group-item-heading">{{Entity.Name}}</h4>
+                <p class="list-group-item-text">{{Entity.Country}}</p>
+            </a>
+        </div>
     </div>
-    <div class="list-group">
-        <a href="#/entity" class="list-group-item">
-            <span class="text-info">
-                <i class="fa fa-plus-circle"></i>
-                New Entity&hellip;
-            </span>
-        </a>
-        <a href="#/entity/{{Entity.Id}}" class="list-group-item" ng-repeat="Entity in Entities | filter : {Name: Search}">
-            <h4 class="list-group-item-heading">{{Entity.Name}}</h4>
-        </a>
-    </div>
-</div>
+</pah>

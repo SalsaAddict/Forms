@@ -1,0 +1,7 @@
+﻿<pah-form-group for="{{Id}}" label="{{Label}}">
+    <select id="{{Id}}" class="form-control" ng-model="Model">
+        <option value=""></option>
+        <option ng-repeat="Item in Dataset" value="{{Item[Value]}}">{{Item[Text]}}</option>
+    </select>
+    {{Model}}
+</pah-form-group>

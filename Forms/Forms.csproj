@@ -59,6 +59,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Code\Advent.sql" />
+    <Content Include="controls\pahForm.html" />
+    <Content Include="controls\pahFormGroup.html" />
+    <Content Include="controls\pahSelect.html" />
     <Content Include="fonts\fontawesome-webfont.eot" />
     <Content Include="fonts\fontawesome-webfont.ttf" />
     <Content Include="fonts\fontawesome-webfont.woff" />
@@ -86,6 +89,7 @@
     <Content Include="css\bootstrap.min.css" />
     <Content Include="css\font-awesome.min.css" />
     <Content Include="scripts\app\app - Copy.js" />
+    <Content Include="scripts\app\controls.js" />
     <Content Include="views\entities.html" />
     <Content Include="views\entity.html" />
     <Content Include="views\exec.html" />
@@ -99,6 +103,7 @@
     <Content Include="scripts\ui-bootstrap-tpls-0.12.1.min.js" />
     <Content Include="views\home.html" />
     <Content Include="views\form.html" />
+    <Content Include="views\test.html" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>

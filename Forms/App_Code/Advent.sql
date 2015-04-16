@@ -9,6 +9,9 @@ IF OBJECT_ID(N'pr_Entities', N'P') IS NOT NULL DROP PROCEDURE [pr_Entities]
 IF OBJECT_ID(N'EntityType', N'U') IS NOT NULL DROP TABLE [EntityType]
 IF OBJECT_ID(N'EntityTypeEnum', N'U') IS NOT NULL DROP TABLE [EntityTypeEnum]
 IF OBJECT_ID(N'Entity', N'U') IS NOT NULL DROP TABLE [Entity]
+IF OBJECT_ID(N'pr_Currencies', N'P') IS NOT NULL DROP PROCEDURE [pr_Currencies]
+IF OBJECT_ID(N'Currency', N'U') IS NOT NULL DROP TABLE [Currency]
+IF OBJECT_ID(N'pr_Countries', N'P') IS NOT NULL DROP PROCEDURE [pr_Countries]
 IF OBJECT_ID(N'Country', N'U') IS NOT NULL DROP TABLE [Country]
 GO
 
@@ -26,12 +29,51 @@ VALUES
 	(N'US', 'United States')
 GO
 
+CREATE PROCEDURE [pr_Countries]
+AS
+BEGIN
+ SET NOCOUNT ON
+	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+	SELECT [Id], [Name] FROM [Country] ORDER BY [Name]
+	RETURN
+END
+GO
+
+CREATE TABLE [Currency] (
+  [Id] NCHAR(3) NOT NULL,
+		[Name] NVARCHAR(255) NOT NULL,
+		CONSTRAINT [PK_Currency] PRIMARY KEY NONCLUSTERED ([Id]),
+		CONSTRAINT [UQ_Currency_Name] UNIQUE ([Name])
+	)
+GO
+
+INSERT INTO [Currency] ([Id], [Name])
+VALUES
+ (N'GBP', N'British Pounds'),
+	(N'EUR', N'Euros'),
+	(N'USD', N'US Dollars')
+GO
+
+CREATE PROCEDURE [pr_Currencies]
+AS
+BEGIN
+ SET NOCOUNT ON
+	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+	SELECT [Id], [Name] FROM [Currency] ORDER BY [Name]
+	RETURN
+END
+GO
+
 CREATE TABLE [Entity] (
   [Id] INT NOT NULL IDENTITY (1, 1),
 		[Name] NVARCHAR(255) NOT NULL,
+		[Address] NVARCHAR(255) NULL,
+		[PostalCode] NVARCHAR(25) NULL,
+		[CountryId] NCHAR(2) NOT NULL,
 		[Active] BIT NOT NULL CONSTRAINT [DF_Entity_Active] DEFAULT (1),
 		CONSTRAINT [PK_Entity] PRIMARY KEY NONCLUSTERED ([Id]),
-		CONSTRAINT [UQ_Entity_Name] UNIQUE CLUSTERED ([Name])
+		CONSTRAINT [UQ_Entity_Name] UNIQUE CLUSTERED ([CountryId], [Name]),
+		CONSTRAINT [FK_Entity_Country] FOREIGN KEY ([CountryId]) REFERENCES [Country] ([Id])
 	)
 GO
 
@@ -68,25 +110,12 @@ AS
 BEGIN
  SET NOCOUNT ON
 	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
-	;WITH XMLNAMESPACES (N'http://james.newtonking.com/projects/json' AS [json])
 	SELECT
-	 [@json:Array] = N'true',
-	 [Id] = e.[Id],
-		[Name] = e.[Name],
-		( -- Types
-		  SELECT
-				 [@json:Array] = N'true',
-					[Type] = ete.[Type],
-					[Description] = ete.[Description],
-					[Active] = ISNULL(et.[Active], 0)
-				FROM [EntityTypeEnum] ete
-				 LEFT JOIN [EntityType] et ON e.[Id] = et.[EntityId] AND ete.[Type] = et.[Type]
-				ORDER BY ete.[Description]
-				FOR XML PATH (N'Types'), TYPE
-		 )
+	 [Name] = e.[Name],
+		[Country] = co.[Name]
 	FROM [Entity] e
+	 JOIN [Country] co ON e.[CountryId] = co.[Id]
 	ORDER BY e.[Name]
-	FOR XML PATH (N'Entities'), ROOT (N'Root')
 	RETURN
 END
 GO
