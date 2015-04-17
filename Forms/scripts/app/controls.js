@@ -5,21 +5,16 @@
         controller: function ($scope, DataService) {
             var that = this, myDatasets = {};
             $scope.Data = {};
-            $scope.Dataset = function (Name) {
-                if (myDatasets[Name]) return myDatasets[Name].Data; else return [];
-            };
+            $scope.Dataset = function (Name) { return myDatasets[Name].Data; };
             this.SetupDataset = function (Name, Options) { myDatasets[Name] = Options; };
             this.ReloadDataset = function (Name) {
-                window.alert("Refreshing " + Name);
                 var Dataset = myDatasets[Name], Parameters = {};
                 angular.forEach(Dataset.Parameters, function (Item) {
                     var Parameter = {};
-                    if (Item.Field)
-                        Parameters[Item.Name] = Item.Field;
-                    else if (Item.Value)
-                        Parameters[Item.Name] = Item.Value;
-                    else
-                        Parameters[Item.Name] = null;
+                    switch (Item.Type) {
+                        case "Field": Parameters[Item.Name] = $scope.Data[Item.Value]; break;
+                        default: Parameters[Item.Name] = Item.Value; break;
+                    };
                 });
                 DataService.Execute(Dataset.Source, Parameters)
                     .success(function (Response) {
@@ -27,7 +22,6 @@
                         if (Dataset.Master) $scope.Data = angular.copy(Response[0]);
                     })
                     .error(function (Response) {
-                        //window.alert(Response);
                         Dataset.Data = [];
                     });
             };
@@ -35,9 +29,11 @@
                 angular.forEach(myDatasets, function (Options, Name) {
                     that.ReloadDataset(Name);
                     angular.forEach(Options.Parameters, function (Item) {
-                        $scope.$watch(function ($scope) { return Item.Field; }, function (newValue, oldValue) {
-                            if (newValue !== oldValue) { that.ReloadDataset(Name); };
-                        });
+                        if (Item.Type == "Field") {
+                            $scope.$watch("Data." + Item.Value, function (newValue, oldValue) {
+                                if (newValue !== oldValue) { that.ReloadDataset(Name); };
+                            });
+                        };
                     });
                 });
             };
@@ -70,10 +66,13 @@ myApp.directive("pahDatasetParam", function () {
     return {
         restrict: "E",
         require: ["^^pahDataset", "pahDatasetParam"],
-        scope: { Name: "@name", Field: "=field", Value: "@value" },
+        scope: { Name: "@name", Type: "@type", Value: "@value" },
         controller: function ($scope) {
-
-            this.Parameter = { Name: $scope.Name, Field: $scope.Field, Value: $scope.Value }
+            switch ($scope.Type) {
+                case "Field": $scope.Type = "Field"; break;
+                default: $scope.Type = "Constant"; break;
+            };
+            this.Parameter = { Name: $scope.Name, Type: $scope.Type, Value: $scope.Value }
         },
         link: {
             pre: function (scope, iElement, iAttrs, controller) {

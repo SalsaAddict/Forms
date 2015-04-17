@@ -29,10 +29,6 @@ myApp.config(function ($routeProvider) {
             templateUrl: "views/entity.html",
             controller: "EntityController"
         })
-        .when("/incident", {
-            caseInsensitiveMatch: true,
-            templateUrl: "views/incident.html",
-        })
         .otherwise({ redirectTo: "/home" });
 });
 

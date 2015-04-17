@@ -1,3 +1,4 @@
-﻿<select id="{{Id}}" class="form-control" ng-model="Model">
-    <option ng-repeat="Item in Dataset" value="{{Item[Value]}}" ng-selected="Item[Value] == Model">{{Item[Text]}}</option>
-</select>
+﻿    <select id="{{Id}}" class="form-control" ng-model="Model">
+        <option value=""></option>
+        <option ng-repeat="Item in Dataset" value="{{Item[Value]}}">{{Item[Text]}}</option>
+    </select>

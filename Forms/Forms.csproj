@@ -103,7 +103,6 @@
     <Content Include="scripts\ui-bootstrap-tpls-0.12.1.min.js" />
     <Content Include="views\home.html" />
     <Content Include="views\form.html" />
-    <Content Include="views\incident.html" />
     <Content Include="views\test.html" />
     <Content Include="Web.config" />
   </ItemGroup>
