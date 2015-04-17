@@ -1,0 +1,13 @@
+﻿<pah ng-init="Data.InsuredId = 167">
+    <pah-dataset name="Programmes" source="pr_40GetIncidentInsured">
+        <pah-dataset-param name="UserId" value="4835"></pah-dataset-param>
+    </pah-dataset>
+    <pah-dataset name="PolicyCountries" source="pr_40GetInsuredCountry">
+        <pah-dataset-param name="InsuredId" field="Data.InsuredId"></pah-dataset-param>
+    </pah-dataset>
+</pah>
+<div ng-init="Data.InsuredId = 158">
+    <pah-select id="InsuredId" label="Programme" model="Data.InsuredId" dataset="Dataset('Programmes')" value="Insuredid" text="Insuredname"></pah-select>
+    <pah-select id="CountryId" label="Policy Country" model="Data.CountryId" dataset="Dataset('PolicyCountries')" value="CountryId" text="Country"></pah-select>
+    
+</div>
