@@ -32,7 +32,7 @@ myApp.config(function ($routeProvider) {
         .otherwise({ redirectTo: "/home" });
 });
 
-myApp.service("DataService", ["$http", function ($http) {
+myApp.service("DataService", ["$http", "$log", function ($http, $log) {
 
     this.Execute = function (Name, Parameters, ReturnsXML) {
         var NVArray = [], XML = null;
@@ -44,7 +44,8 @@ myApp.service("DataService", ["$http", function ($http) {
                     NVArray.push({ Name: Key, Value: Value });
             };
         });
-        return $http.post("exec.ashx?rx=" + !(ReturnsXML !== true), { Name: Name, Parameters: NVArray, XML: XML });
+        return $http.post("exec.ashx?rx=" + ((ReturnsXML === true) ? "true" : "false"), { Name: Name, Parameters: NVArray, XML: XML })
+            .error(function (Response) { $log.error(Response); });
     };
 
 }]);
@@ -53,31 +54,14 @@ myApp.controller("EntitiesController", ["$scope", "DataService", function ($scop
 
     $scope.Entities = [];
 
-    DataService.Execute("pr_Entities", null, true).success(function (Response) { $scope.Entities = Response.Root.Entities; });
-
 }]);
 
 myApp.controller("EntityController", ["$scope", "$routeParams", "DataService", function ($scope, $routeParams, DataService) {
 
-    $scope.Entity = {};
+    $scope.MyEntity = $scope.Entity;
 
-    $scope.Load = function (EntityId) {
-        DataService.Execute("pr_Entity", { Id: EntityId }, true)
-            .success(function (Response) {
-                $scope.Entity = Response.Entity;
-            });
+    $scope.Test = function () {
+        window.alert(JSON.stringify($scope.Dataset("Entity")));
     };
-
-    $scope.Save = function () {
-        DataService.Execute("pr_Entity_Save", { XML: { Entity: $scope.Entity } }, true)
-            .success(function (Response) {
-                $scope.Entity = Response.Entity;
-            })
-            .error(function (Response) {
-                window.alert(Response);
-            });
-    };
-
-    if ($routeParams.EntityId) { $scope.Load($routeParams.EntityId); };
 
 }]);

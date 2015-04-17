@@ -1,15 +1,11 @@
-﻿<pah>
-    <pah-dataset name="Countries" source="pr_Countries" master="true">
-    </pah-dataset>
+﻿<mg-data>
+    <mg-object name="Countries" source="pr_Countries" type="array">
 
-    <pah-form>
-        <pah-select id="MyTest" label="Test" model="Data.Id" dataset="Dataset('Countries')" value="Id" text="Name">
-        </pah-select>
-    </pah-form>
-
-    <input type="text" ng-model="Data.Id" />
-    {{Data.Id}}
-
-
-</pah>
-
+    </mg-object>
+    <mg-object name="Entity" source="pr_Entity" type="object">
+        <mg-parameter name="Id" type="route" value="sId"></mg-parameter>
+    </mg-object>
+</mg-data>
+<input type="number" ng-model="EntityId" class="form-control" />
+<pre>{{Countries}}</pre>
+<pre>{{Entity}}</pre>

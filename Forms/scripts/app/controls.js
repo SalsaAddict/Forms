@@ -1,37 +1,46 @@
-﻿myApp.directive("pah", ["DataService", function () {
+﻿myApp.directive("mgData", ["DataService", function () {
     return {
         restrict: "E",
-        require: "pah",
-        controller: function ($scope, DataService) {
-            var that = this, myDatasets = {};
-            $scope.Data = {};
-            $scope.Dataset = function (Name) { return myDatasets[Name].Data; };
-            this.SetupDataset = function (Name, Options) { myDatasets[Name] = Options; };
-            this.ReloadDataset = function (Name) {
-                var Dataset = myDatasets[Name], Parameters = {};
-                angular.forEach(Dataset.Parameters, function (Item) {
-                    var Parameter = {};
-                    switch (Item.Type) {
-                        case "Field": Parameters[Item.Name] = $scope.Data[Item.Value]; break;
-                        default: Parameters[Item.Name] = Item.Value; break;
+        require: "mgData",
+        controller: function ($scope, $parse, $routeParams, DataService) {
+            var that = this, mgObjects = {};
+            this.registerObject = function (name, options) {
+                switch (options.type) {
+                    case "array": $scope[name] = []; break;
+                    case "object": $scope[name] = {}; break;
+                    case "singleton": $scope[name] = {}; break;
+                    default: $scope[name] = null; break;
+                };
+                mgObjects[name] = options;
+            };
+            this.loadObject = function (name) {
+                var o = mgObjects[name], parameters = {};
+                angular.forEach(o.parameters, function (item) {
+                    switch (item.type) {
+                        case "scope": parameters[item.name] = $parse(item.value)($scope); break;
+                        case "route": parameters[item.name] = $routeParams[item.value]; break;
+                        default: parameters[item.name] = item.value; break;
                     };
                 });
-                DataService.Execute(Dataset.Source, Parameters)
-                    .success(function (Response) {
-                        Dataset.Data = Response;
-                        if (Dataset.Master) $scope.Data = angular.copy(Response[0]);
-                    })
-                    .error(function (Response) {
-                        Dataset.Data = [];
+                DataService.Execute(o.source, parameters, (o.type === "object") ? true : false)
+                    .success(function (data) {
+                        switch (o.type) {
+                            case "array": $scope[name] = data; break;
+                            case "object": $scope[name] = data; break;
+                            case "singleton": $scope[name] = data[0]; break;
+                            default: $scope[name] = data; break;
+                        };
                     });
             };
-            this.InitializeDatasets = function () {
-                angular.forEach(myDatasets, function (Options, Name) {
-                    that.ReloadDataset(Name);
-                    angular.forEach(Options.Parameters, function (Item) {
-                        if (Item.Type == "Field") {
-                            $scope.$watch("Data." + Item.Value, function (newValue, oldValue) {
-                                if (newValue !== oldValue) { that.ReloadDataset(Name); };
+            this.initialize = function () {
+                angular.forEach(mgObjects, function (options, name) {
+                    that.loadObject(name);
+                    angular.forEach(options.parameters, function (item) {
+                        if (item.type === "scope") {
+                            $scope.$watch(item.value, function (newValue, oldValue) {
+                                if (newValue !== oldValue) {
+                                    that.loadObject(name);
+                                }
                             });
                         };
                     });
@@ -39,79 +48,50 @@
             };
         },
         link: function (scope, iElement, iAttrs, controller) {
-            controller.InitializeDatasets();
+            controller.initialize();
         }
     };
 }]);
 
-myApp.directive("pahDataset", function () {
+myApp.directive("mgObject", function () {
     return {
         restrict: "E",
-        require: ["^^pah", "pahDataset"],
-        scope: { Name: "@name", Source: "@source", Master: "@master" },
+        require: "^^mgData",
+        scope: { name: "@", source: "@", type: "@" },
         controller: function ($scope) {
-            $scope.Master = !($scope.Master !== "true");
-            this.Options = { Source: $scope.Source, Master: $scope.Master, Parameters: [] };
-            this.AddParameter = function (Parameter) { this.Options.Parameters.push(Parameter); };
-        },
-        link: {
-            pre: function (scope, iElement, iAttrs, controller) {
-                controller[0].SetupDataset(scope.Name, controller[1].Options);
-            }
-        }
-    };
-});
-
-myApp.directive("pahDatasetParam", function () {
-    return {
-        restrict: "E",
-        require: ["^^pahDataset", "pahDatasetParam"],
-        scope: { Name: "@name", Type: "@type", Value: "@value" },
-        controller: function ($scope) {
-            switch ($scope.Type) {
-                case "Field": $scope.Type = "Field"; break;
-                default: $scope.Type = "Constant"; break;
+            switch (angular.lowercase($scope.type)) {
+                case "object": $scope.type = "object"; break;
+                case "singleton": $scope.type = "singleton"; break;
+                default: $scope.type = "array"; break;
             };
-            this.Parameter = { Name: $scope.Name, Type: $scope.Type, Value: $scope.Value }
+            $scope.options = { source: $scope.source, type: $scope.type, parameters: [] };
+            this.addParameter = function (parameter) { $scope.options.parameters.push(parameter); };
         },
         link: {
             pre: function (scope, iElement, iAttrs, controller) {
-                controller[0].AddParameter(controller[1].Parameter);
+                controller.registerObject(scope.name, scope.options);
             }
         }
     };
 });
 
-myApp.directive("pahForm", function () {
+myApp.directive("mgParameter", function () {
     return {
         restrict: "E",
-        templateUrl: "controls/pahForm.html",
-        transclude: true
-    };
-});
-
-myApp.directive("pahFormGroup", function () {
-    return {
-        restrict: "E",
-        templateUrl: "controls/pahFormGroup.html",
-        transclude: true,
-        scope: { For: "@for", Label: "@label" }
-    };
-});
-
-myApp.directive("pahSelect", function () {
-    return {
-        restrict: "E",
-        templateUrl: "controls/pahSelect.html",
-        transclude: true,
-        scope: {
-            Id: "@id",
-            Label: "@label",
-            Model: "=model",
-            Dataset: "=dataset",
-            Value: "@value",
-            Text: "@text"
+        require: "^^mgObject",
+        scope: { name: "@", type: "@", value: "@" },
+        controller: function ($scope) {
+            switch (angular.lowercase($scope.type)) {
+                case "scope": $scope.type = "scope"; break;
+                case "route": $scope.type = "route"; break;
+                default: $scope.type = "const"; break;
+            };
+            $scope.parameter = { name: $scope.name, type: $scope.type, value: $scope.value };
         },
+        link: {
+            pre: function (scope, iElement, iAttrs, controller) {
+                controller.addParameter(scope.parameter);
+            }
+        }
     };
 });
-

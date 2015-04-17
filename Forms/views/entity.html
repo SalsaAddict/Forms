@@ -1,8 +1,13 @@
 ﻿<pah>
+    <pah-dataset name="Entity" source="pr_Entity" rx="true">
+        <pah-dataset-param name="Id" value="1"></pah-dataset-param>
+    </pah-dataset>
+    {{Entity}}
+    
     <form class="form-horizontal">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h4 class="text-info">{{Entity.Name || 'New Entity'}}</h4>
+                <h4 class="text-info">{{Entity.Entity.Name || 'New Entity'}}</h4>
             </div>
             <div class="panel-body">
                 <div class="form-group">
@@ -36,3 +41,4 @@
     </form>
     <pre>{{pahData}}</pre>
 </pah>
+<button class="btn btn-default" ng-click="Test()">Test</button>
