@@ -1,8 +1,15 @@
 ﻿<pah>
-    <pah-dataset name="Incident" source="pr_40GetIncident" master="true">
-        <pah-dataset-param name="sId" value="4975522" />
+    <pah-dataset name="Countries" source="pr_Countries" master="true">
     </pah-dataset>
-    <pre>{{Data}}</pre>
-    <pre>{{Data.InsuredId}}</pre>
+
+    <pah-form>
+        <pah-select id="MyTest" label="Test" model="Data.Id" dataset="Dataset('Countries')" value="Id" text="Name">
+        </pah-select>
+    </pah-form>
+
+    <input type="text" ng-model="Data.Id" />
+    {{Data.Id}}
+
 
 </pah>
+

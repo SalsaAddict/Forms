@@ -38,7 +38,9 @@
                 });
             };
         },
-        link: function (scope, iElement, iAttrs, controller) { controller.InitializeDatasets(); }
+        link: function (scope, iElement, iAttrs, controller) {
+            controller.InitializeDatasets();
+        }
     };
 }]);
 
@@ -52,9 +54,10 @@ myApp.directive("pahDataset", function () {
             this.Options = { Source: $scope.Source, Master: $scope.Master, Parameters: [] };
             this.AddParameter = function (Parameter) { this.Options.Parameters.push(Parameter); };
         },
-        link: function (scope, iElement, iAttrs, controller) {
-            controller[0].SetupDataset(scope.Name, controller[1].Options);
-            iElement.remove();
+        link: {
+            pre: function (scope, iElement, iAttrs, controller) {
+                controller[0].SetupDataset(scope.Name, controller[1].Options);
+            }
         }
     };
 });
@@ -71,8 +74,10 @@ myApp.directive("pahDatasetParam", function () {
             };
             this.Parameter = { Name: $scope.Name, Type: $scope.Type, Value: $scope.Value }
         },
-        link: function (scope, iElement, iAttrs, controller) {
-            controller[0].AddParameter(controller[1].Parameter);
+        link: {
+            pre: function (scope, iElement, iAttrs, controller) {
+                controller[0].AddParameter(controller[1].Parameter);
+            }
         }
     };
 });
