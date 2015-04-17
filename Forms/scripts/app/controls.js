@@ -26,7 +26,7 @@
                     .success(function (data) {
                         switch (o.type) {
                             case "array": $scope[name] = data; break;
-                            case "object": $scope[name] = data; break;
+                            case "object": if (o.root) $scope[name] = data[o.root]; else $scope[name] = data; break;
                             case "singleton": $scope[name] = data[0]; break;
                             default: $scope[name] = data; break;
                         };
@@ -47,9 +47,7 @@
                 });
             };
         },
-        link: function (scope, iElement, iAttrs, controller) {
-            controller.initialize();
-        }
+        link: function (scope, iElement, iAttrs, controller) { controller.initialize(); }
     };
 }]);
 
@@ -57,20 +55,21 @@ myApp.directive("mgObject", function () {
     return {
         restrict: "E",
         require: "^^mgData",
-        scope: { name: "@", source: "@", type: "@" },
+        scope: { name: "@", source: "@", type: "@", root: "@" },
         controller: function ($scope) {
             switch (angular.lowercase($scope.type)) {
                 case "object": $scope.type = "object"; break;
                 case "singleton": $scope.type = "singleton"; break;
                 default: $scope.type = "array"; break;
             };
-            $scope.options = { source: $scope.source, type: $scope.type, parameters: [] };
+            $scope.options = { source: $scope.source, type: $scope.type, root: $scope.root, parameters: [] };
             this.addParameter = function (parameter) { $scope.options.parameters.push(parameter); };
         },
         link: {
             pre: function (scope, iElement, iAttrs, controller) {
                 controller.registerObject(scope.name, scope.options);
-            }
+            },
+            post: function (scope, iElement, iAttrs, controller) { iElement.remove(); }
         }
     };
 });
@@ -94,4 +93,45 @@ myApp.directive("mgParameter", function () {
             }
         }
     };
+});
+
+myApp.directive("mgForm", function () {
+    return {
+        restrict: "E",
+        require: "^^mgData",
+        scope: true,
+        template: "<form class='form-horizontal' ng-transclude></form>",
+        transclude: true,
+        replace: true,
+        controller: function ($scope) {
+
+        },
+        link: function (scope, iElement, iAttrs, controller) { }
+    }
+});
+
+myApp.directive("mgPanel", function () {
+    return {
+        restrict: "E",
+        require: "^^mgForm",
+        scope: true,
+        template: "<div class='panel panel-default' ng-transclude></div>",
+        transclude: true,
+        replace: true,
+        controller: function ($scope) { },
+        link: function (scope, iElement, iAttrs, controller) { }
+    }
+});
+
+myApp.directive("mgPanelHeading", function () {
+    return {
+        restrict: "E",
+        require: "^^mgPanel",
+        scope: true,
+        template: "<div class='panel-heading'><h4 ng-transclude></h4></div>",
+        transclude: true,
+        replace: true,
+        controller: function ($scope) { },
+        link: function (scope, iElement, iAttrs, controller) { }
+    }
 });

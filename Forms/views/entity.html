@@ -1,14 +1,14 @@
-﻿<pah>
-    <pah-dataset name="Entity" source="pr_Entity" rx="true">
-        <pah-dataset-param name="Id" value="1"></pah-dataset-param>
-    </pah-dataset>
-    {{Entity}}
-    
-    <form class="form-horizontal">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h4 class="text-info">{{Entity.Entity.Name || 'New Entity'}}</h4>
-            </div>
+﻿<mg-data>
+    <mg-object name="Entity" source="pr_Entity" type="singleton">
+        <mg-parameter name="EntityId" type="route" value="EntityId"></mg-parameter>
+    </mg-object>
+    <mg-object name="EntityTypes" source="pr_EntityTypes">
+        <mg-parameter name="EntityId" type="route" value="EntityId"></mg-parameter>
+    </mg-object>
+    <mg-object name="Countries" source="pr_Countries"></mg-object>
+    <mg-form>
+        <mg-panel>
+            <mg-panel-heading>{{Entity.Name || 'New Entity'}}</mg-panel-heading>
             <div class="panel-body">
                 <div class="form-group">
                     <label for="Name" class="control-label col-sm-3">Name</label>
@@ -16,11 +16,23 @@
                         <input type="text" class="form-control" ng-model="Entity.Name" />
                     </div>
                 </div>
-                <div class="form-group" ng-repeat="Type in Entity.Types">
+                <div class="form-group">
+                    <label for="Address" class="control-label col-sm-3">Address</label>
+                    <div class="col-sm-9">
+                        <textarea class="form-control" id="Address" ng-model="Entity.Address" rows="5"></textarea>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="CountryId" class="control-label col-sm-3">Country</label>
+                    <div class="col-sm-9">
+                        <select id="CountryId" class="form-control" ng-model="Entity.CountryId" ng-options="Country.Id as Country.Name for Country in Countries"></select>
+                    </div>
+                </div>
+                <div class="form-group" ng-repeat="Type in EntityTypes">
                     <div class="col-sm-9 col-sm-offset-3">
                         <div class="checkbox">
                             <label>
-                                <input type="checkbox" ng-model="Type.Active" ng-true-value="'1'" ng-false-value="'0'" />
+                                <input type="checkbox" ng-model="Type.Active" />
                                 {{Type.Description}}
                             </label>
                         </div>
@@ -37,8 +49,7 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </form>
-    <pre>{{pahData}}</pre>
-</pah>
-<button class="btn btn-default" ng-click="Test()">Test</button>
+        </mg-panel>
+    </mg-form>
+</mg-data>
+<pre>{{EntityTypes}}</pre>

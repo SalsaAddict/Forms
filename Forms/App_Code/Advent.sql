@@ -6,7 +6,9 @@ IF OBJECT_ID(N'Binder', N'U') IS NOT NULL DROP TABLE [Binder]
 IF OBJECT_ID(N'pr_Entity_Save', N'P') IS NOT NULL DROP PROCEDURE [pr_Entity_Save]
 IF OBJECT_ID(N'pr_Entity', N'P') IS NOT NULL DROP PROCEDURE [pr_Entity]
 IF OBJECT_ID(N'pr_Entities', N'P') IS NOT NULL DROP PROCEDURE [pr_Entities]
+IF OBJECT_ID(N'pr_EntityTypes', N'P') IS NOT NULL DROP PROCEDURE [pr_EntityTypes]
 IF OBJECT_ID(N'EntityType', N'U') IS NOT NULL DROP TABLE [EntityType]
+IF OBJECT_ID(N'pr_EntityTypeEnum', N'P') IS NOT NULL DROP PROCEDURE [pr_EntityTypeEnum]
 IF OBJECT_ID(N'EntityTypeEnum', N'U') IS NOT NULL DROP TABLE [EntityTypeEnum]
 IF OBJECT_ID(N'Entity', N'U') IS NOT NULL DROP TABLE [Entity]
 IF OBJECT_ID(N'pr_Currencies', N'P') IS NOT NULL DROP PROCEDURE [pr_Currencies]
@@ -77,6 +79,12 @@ CREATE TABLE [Entity] (
 	)
 GO
 
+INSERT INTO [Entity] ([Name], [CountryId])
+VALUES
+ (N'Whitespace Software Limited', N'UK'),
+	(N'Datarise Limited', N'US')
+GO
+
 CREATE TABLE [EntityTypeEnum] (
   [Type] NCHAR(3) NOT NULL,
 		[Description] NVARCHAR(255) NOT NULL,
@@ -95,6 +103,17 @@ VALUES
 	(N'RBR', N'Retail Broker')
 GO
 
+CREATE PROCEDURE [pr_EntityTypeEnum]
+AS
+BEGIN
+ SET NOCOUNT ON
+	SET ANSI_WARNINGS OFF
+	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+	SELECT [Type], [Description] FROM [EntityTypeEnum] ORDER BY [Description]
+	RETURN
+END
+GO
+
 CREATE TABLE [EntityType] (
   [EntityId] INT NOT NULL,
 		[Type] NCHAR(3) NOT NULL,
@@ -105,12 +124,30 @@ CREATE TABLE [EntityType] (
 	)
 GO
 
+CREATE PROCEDURE [pr_EntityTypes](@EntityId INT = NULL)
+AS
+BEGIN
+ SET NOCOUNT ON
+	SET ANSI_WARNINGS OFF
+	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+	SELECT
+	 [Type] = enm.[Type],
+		[Description] = enm.[Description],
+		[Active] = ISNULL(et.[Active], 0)
+	FROM [EntityTypeEnum] enm
+	 LEFT JOIN [EntityType] et ON @EntityId = et.[EntityId] AND enm.[Type] = et.[Type]
+	ORDER BY enm.[Description]
+	RETURN
+END
+GO
+
 CREATE PROCEDURE [pr_Entities]
 AS
 BEGIN
  SET NOCOUNT ON
 	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
 	SELECT
+	 [Id] = e.[Id],
 	 [Name] = e.[Name],
 		[Country] = co.[Name]
 	FROM [Entity] e
@@ -120,29 +157,19 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE [pr_Entity](@Id INT)
+CREATE PROCEDURE [pr_Entity](@EntityId INT)
 AS
 BEGIN
  SET NOCOUNT ON
+	SET ANSI_WARNINGS OFF
 	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
-	;WITH XMLNAMESPACES (N'http://james.newtonking.com/projects/json' AS [json])
 	SELECT
-	 [Id] = e.[Id],
-		[Name] = e.[Name],
-		( -- Types
-		  SELECT
-				 [@json:Array] = N'true',
-					[Type] = ete.[Type],
-					[Description] = ete.[Description],
-					[Active] = ISNULL(et.[Active], 0)
-				FROM [EntityTypeEnum] ete
-				 LEFT JOIN [EntityType] et ON e.[Id] = et.[EntityId] AND ete.[Type] = et.[Type]
-				ORDER BY ete.[Description]
-				FOR XML PATH (N'Types'), TYPE
-		 )
-	FROM [Entity] e
-	WHERE e.[Id] = @Id
-	FOR XML PATH (N'Entity')
+	 [Id],
+		[Name],
+		[Address],
+		[CountryId]
+	FROM [Entity]
+	WHERE [Id] = @EntityId
 	RETURN
 END
 GO
