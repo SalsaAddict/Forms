@@ -1,14 +1,14 @@
-﻿<mg-data>
-    <mg-object name="Entity" source="pr_Entity" type="singleton">
-        <mg-parameter name="EntityId" type="route" value="EntityId"></mg-parameter>
-    </mg-object>
-    <mg-object name="EntityTypes" source="pr_EntityTypes">
-        <mg-parameter name="EntityId" type="route" value="EntityId"></mg-parameter>
-    </mg-object>
-    <mg-object name="Countries" source="pr_Countries"></mg-object>
+﻿<mg-controller>
+    <mg-proc name="Entity" source="pr_Entity" type="singleton" autoexec="true">
+        <mg-proc-param name="EntityId" type="route" value="EntityId" required="true"></mg-proc-param>
+    </mg-proc>
+    <mg-proc name="EntityTypes" source="pr_EntityTypes" autoexec="true">
+        <mg-proc-param name="EntityId" type="route" value="EntityId"></mg-proc-param>
+    </mg-proc>
+    <mg-proc name="Countries" source="pr_Countries" autoexec="true">
+    </mg-proc>
     <mg-form>
-        <mg-panel>
-            <mg-panel-heading>{{Entity.Name || 'New Entity'}}</mg-panel-heading>
+        <mg-panel heading="{{Entity.Name || 'New Entity'}}">
             <div class="panel-body">
                 <div class="form-group">
                     <label for="Name" class="control-label col-sm-3">Name</label>
@@ -51,5 +51,5 @@
             </div>
         </mg-panel>
     </mg-form>
-</mg-data>
+</mg-controller>
 <pre>{{EntityTypes}}</pre>
