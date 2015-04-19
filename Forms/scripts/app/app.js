@@ -11,17 +11,19 @@ myApp.config(function ($logProvider, $routeProvider) {
         .otherwise({ redirectTo: "/home" });
 });
 
-myApp.service("DataService", ["$http", "$log", function ($http, $log) {
-    this.Execute = function (Name, Parameters, ReturnsXML) {
-        var NVArray = [], XML = null;
-        angular.forEach(Parameters, function (Value, Key) {
-            if (Value) { if (Key == "XML") XML = Value; else NVArray.push({ Name: Key, Value: Value }); };
-        });
-        return $http.post("exec.ashx?rx=" + ((ReturnsXML === true) ? "true" : "false"), { Name: Name, Parameters: NVArray, XML: XML })
-            .error(function (Response) { $log.error(Response); });
-    };
-}]);
 
-myApp.controller("EntityController", ["$scope", "$routeParams", "DataService", function ($scope, $routeParams, DataService) {
+myApp.controller("EntityController", ["$scope", "$routeParams", "$location", function ($scope, $routeParams, $location) {
+
+    $scope.inserting = function () { return ($routeParams.EntityId) ? false : true; };
+
+    $scope.saveProc = function () { return ($scope.inserting() === true) ? "apiEntityInsert" : "apiEntityUpdate"; };
+
+    $scope.PostalCodeLabel = function () {
+        switch ($scope.Entity.CountryId) {
+            case "UK": return "Postcode"; break;
+            case "US": return "ZIP Code"; break;
+            default: return "Postal Code"; break;
+        };
+    };
 
 }]);

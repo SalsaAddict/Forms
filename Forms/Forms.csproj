@@ -59,9 +59,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Code\Advent.sql" />
-    <Content Include="controls\pahForm.html" />
-    <Content Include="controls\pahFormGroup.html" />
-    <Content Include="controls\pahSelect.html" />
+    <Content Include="controls\mgForm.html" />
+    <Content Include="controls\mgLabel.html" />
+    <Content Include="css\mg.css" />
     <Content Include="fonts\fontawesome-webfont.eot" />
     <Content Include="fonts\fontawesome-webfont.ttf" />
     <Content Include="fonts\fontawesome-webfont.woff" />

@@ -1,59 +1,56 @@
-﻿myApp.directive("mgController", ["DataService", function () {
+﻿myApp.service("DataService", ["$http", "$log", function ($http, $log) {
+    this.Execute = function (Name, Parameters, ReturnsXML) {
+        var NVArray = [], XML = null;
+        angular.forEach(Parameters, function (Value, Key) {
+            if (Value) { if (Key == "XML") XML = Value; else NVArray.push({ Name: Key, Value: Value }); };
+        });
+        return $http.post("exec.ashx?rx=" + ((ReturnsXML === true) ? "true" : "false"), { Name: Name, Parameters: NVArray, XML: XML })
+            .error(function (Response) { $log.error(Response); });
+    };
+}]);
+
+myApp.directive("mgController", ["DataService", function () {
     return {
         restrict: "E",
         require: "mgController",
         controller: function ($scope, $parse, $routeParams, DataService, $log) {
             var that = this, mgProcs = {};
-            this.registerObject = function (name, options) {
-                switch (options.type) {
-                    case "array": $scope[name] = []; break;
-                    case "object": $scope[name] = {}; break;
-                    case "singleton": $scope[name] = {}; break;
-                    default:
-                        $log.error("mgController:registerObject:" + name + ":invalidType:" + type);
-                        $scope[name] = null;
-                        break;
-                };
+            this.registerProc = function (name, options) {
                 mgProcs[name] = options;
+                if (options.ngModel) $scope.$eval(options.ngModel + " = " + ((options.type === "array") ? "[]" : "{}"))
             };
             $scope.Execute = this.Execute = function (name) {
-                var o = mgProcs[name], parameters =  {}, shouldExecute = true;
+                var o = mgProcs[name], parameters = {}, shouldExecute = true;
                 angular.forEach(o.parameters, function (item) {
                     var value = null;
                     switch (item.type) {
-                        case "scope":
-                            if (angular.isDefined($parse(item.value)($scope)))
-                                value = $parse(item.value)($scope);
-                            else
-                                if (item.required === true) shouldExecute = false;
-                            break;
-                        case "route":
-                            if (angular.isDefined($routeParams[item.value]))
-                                value = $routeParams[item.value];
-                            else {
-                                if (item.required === true) shouldExecute = false;
-                            };
-                            break;
+                        case "scope": value = $parse(item.value)($scope); break;
+                        case "route": value = $routeParams[item.value]; break;
                         default: value = item.value; break;
                     };
-                    parameters[item.name] = value;
+                    if (item.required === true && angular.isUndefined(value))
+                        shouldExecute = false;
+                    else
+                        parameters[item.name] = value;
                 });
                 if (shouldExecute === true) {
                     $log.debug("mgController:Execute:" + name);
-                    DataService.Execute(o.source, parameters, (o.type === "object") ? true : false)
+                    DataService.Execute(name, parameters, (o.type === "object") ? true : false)
                         .success(function (data) {
-                            switch (o.type) {
-                                case "array": $scope[name] = data; break;
-                                case "object": if (o.root) $scope[name] = data[o.root]; else $scope[name] = data; break;
-                                case "singleton": $scope[name] = data[0]; break;
-                                default: $scope[name] = data; break;
+                            if (o.ngModel) {
+                                ngModel = $parse(o.ngModel);
+                                switch (o.type) {
+                                    case "object": if (o.root) ngModel.assign($scope, data[o.root]); else ngModel.assign($scope, data); break;
+                                    case "singleton": ngModel.assign($scope, data[0]); break;
+                                    default: ngModel.assign($scope, data); break;
+                                };
                             };
                         });
                 };
             };
             this.initialize = function () {
                 angular.forEach(mgProcs, function (options, name) {
-                    if (options.autoexec) {
+                    if (options.autoexec === true) {
                         that.Execute(name);
                         angular.forEach(options.parameters, function (item) {
                             if (item.type === "scope") {
@@ -66,7 +63,7 @@
                         });
                     };
                 });
-                $scope.$broadcast("mg.Initialized");
+                $scope.$broadcast("mgController.initialized");
             };
         },
         link: function (scope, iElement, iAttrs, controller) { controller.initialize(); }
@@ -77,22 +74,21 @@ myApp.directive("mgProc", function () {
     return {
         restrict: "E",
         require: "^^mgController",
-        scope: { name: "@", source: "@", type: "@", root: "@", autoexec: "@" },
+        scope: { name: "@", type: "@", root: "@", ngModel: "@", autoexec: "@" },
         controller: function ($scope) {
             switch (angular.lowercase($scope.type)) {
                 case "object": $scope.type = "object"; break;
                 case "singleton": $scope.type = "singleton"; break;
                 default: $scope.type = "array"; break;
             };
-            $scope.autoexec = (angular.lowercase($scope.autoexec) === "true") ? true : false;
-            $scope.options = { source: $scope.source, type: $scope.type, root: $scope.root, parameters: [], autoexec: $scope.autoexec };
+            $scope.autoexec = (angular.lowercase($scope.autoexec === "true")) ? true : false;
+            $scope.options = { type: $scope.type, root: $scope.root, parameters: [], ngModel: $scope.ngModel, autoexec: $scope.autoexec };
             this.addParameter = function (parameter) { $scope.options.parameters.push(parameter); };
         },
         link: {
             pre: function (scope, iElement, iAttrs, controller) {
-                controller.registerObject(scope.name, scope.options);
-            },
-            post: function (scope, iElement, iAttrs, controller) { iElement.remove(); }
+                controller.registerProc(scope.name, scope.options);
+            }
         }
     };
 });
@@ -119,30 +115,54 @@ myApp.directive("mgProcParam", function () {
     };
 });
 
-myApp.directive("mgForm", function () {
+myApp.directive("mgForm", ["$window", "$location", "$route", function ($window, $location, $route) {
     return {
         restrict: "E",
         require: "^^mgController",
-        scope: true,
-        template: "<form class='form-horizontal' ng-transclude></form>",
+        templateUrl: "controls/mgForm.html",
         transclude: true,
-        replace: true,
+        scope: { name: "@", title: "@", backRoute: "@back", saveProc: "@", deleteProc: "@" },
         controller: function ($scope) {
-
+            this.form = $scope.form = function () { return $scope[$scope.name]; };
+            $scope.editable = ($scope.saveProc) ? true : false;
+            $scope.deletable = ($scope.deleteProc) ? true : false;
+            $scope.back = function () { if ($scope.back) $location.path($scope.backRoute); else $window.history.back(); };
+            $scope.undo = function () { $route.reload(); };
         },
-        link: function (scope, iElement, iAttrs, controller) { }
+        link: function (scope, iElement, iAttrs, controller) {
+            scope.save = function () {
+                controller.Execute(scope.saveProc);
+                scope.form().$setPristine();
+            };
+            scope.delete = function () {
+                controller.Execute(scope.deleteProc);
+                scope.back();
+            };
+        }
     }
-});
+}]);
 
-myApp.directive("mgPanel", function () {
+myApp.directive("mgField", function () {
     return {
         restrict: "E",
         require: "^^mgForm",
-        scope: { heading: "@" },
-        template: "<div class='panel panel-default'><div class='panel-heading'><h4>{{heading}}</h4></div><ng-transclude></ng-transclude></div>",
+        templateUrl: "controls/mgLabel.html",
         transclude: true,
-        replace: true,
-        controller: function ($scope) { },
-        link: function (scope, iElement, iAttrs, controller) { }
-    }
+        scope: { labelFor: "@for", labelText: "@text" },
+        controller: function ($scope) { this.labelFor = $scope.labelFor; },
+        link: function (scope, iElement, iAttrs, controller) {
+            scope.form = function () { return controller.form(); };
+        }
+    };
+});
+
+myApp.directive("mgControl", function () {
+    return {
+        restrict: "A",
+        require: "^^mgField",
+        link: function (scope, iElement, iAttrs, controller) {
+            if (!iElement.hasClass("form-control")) iElement.addClass("form-control");
+            iElement.attr("id", controller.labelFor);
+        }
+    };
 });

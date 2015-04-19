@@ -1,55 +1,44 @@
 ﻿<mg-controller>
-    <mg-proc name="Entity" source="pr_Entity" type="singleton" autoexec="true">
+    <mg-proc name="apiEntity" type="singleton" ng-model="Entity" autoexec="true">
         <mg-proc-param name="EntityId" type="route" value="EntityId" required="true"></mg-proc-param>
     </mg-proc>
-    <mg-proc name="EntityTypes" source="pr_EntityTypes" autoexec="true">
-        <mg-proc-param name="EntityId" type="route" value="EntityId"></mg-proc-param>
+    <mg-proc name="apiEntityTypes" ng-model="Types" autoexec="true"></mg-proc>
+    <mg-proc name="apiCountries" ng-model="Countries" autoexec="true"></mg-proc>
+    <mg-proc name="{{saveProc()}}" ng-model="Saved">
+        <mg-proc-param name="Id" type="route" value="EntityId" ng-if="!inserting()"></mg-proc-param>
+        <mg-proc-param name="Name" type="scope" value="Entity.Name"></mg-proc-param>
+        <mg-proc-param name="Address" type="scope" value="Entity.Address"></mg-proc-param>
+        <mg-proc-param name="PostalCode" type="scope" value="Entity.PostalCode"></mg-proc-param>
+        <mg-proc-param name="CountryId" type="scope" value="Entity.CountryId"></mg-proc-param>
+        <mg-proc-param name="{{Type.Code}}" type="scope" value="Entity.{{Type.Code}}" ng-repeat="Type in Types"></mg-proc-param>
     </mg-proc>
-    <mg-proc name="Countries" source="pr_Countries" autoexec="true">
+    <mg-proc name="apiEntityDelete">
+        <mg-proc-param name="Id" type="route" value="EntityId"></mg-proc-param>
     </mg-proc>
-    <mg-form>
-        <mg-panel heading="{{Entity.Name || 'New Entity'}}">
-            <div class="panel-body">
-                <div class="form-group">
-                    <label for="Name" class="control-label col-sm-3">Name</label>
-                    <div class="col-sm-9">
-                        <input type="text" class="form-control" ng-model="Entity.Name" />
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="Address" class="control-label col-sm-3">Address</label>
-                    <div class="col-sm-9">
-                        <textarea class="form-control" id="Address" ng-model="Entity.Address" rows="5"></textarea>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="CountryId" class="control-label col-sm-3">Country</label>
-                    <div class="col-sm-9">
-                        <select id="CountryId" class="form-control" ng-model="Entity.CountryId" ng-options="Country.Id as Country.Name for Country in Countries"></select>
-                    </div>
-                </div>
-                <div class="form-group" ng-repeat="Type in EntityTypes">
-                    <div class="col-sm-9 col-sm-offset-3">
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" ng-model="Type.Active" />
-                                {{Type.Description}}
-                            </label>
-                        </div>
-                    </div>
+    <mg-form name="EntityForm" title="{{Entity.Name || 'New Entity'}}" back="/entities" save-proc="{{saveProc()}}" delete-proc="apiEntityDelete">
+        <mg-field for="Name" text="Name">
+            <input type="text" ng-model="Entity.Name" mg-control required />
+        </mg-field>
+        <mg-field for="Address" text="Address">
+            <textarea ng-model="Entity.Address" mg-control rows="5"></textarea>
+        </mg-field>
+        <mg-field for="PostalCode" text="{{PostalCodeLabel()}}">
+            <input type="text" ng-model="Entity.PostalCode" mg-control />
+        </mg-field>
+        <mg-field for="Country" text="Country">
+            <select id="CountryId" ng-model="Entity.CountryId" ng-options="Country.Id as Country.Name for Country in Countries" mg-control required>
+                <option value=""></option>
+            </select>
+        </mg-field>
+        <div class="form-group" ng-repeat="Type in Types">
+            <div class="col-sm-9 col-sm-offset-3">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="Entity[Type.Code]" />
+                        {{Type.Description}}
+                    </label>
                 </div>
             </div>
-            <div class="panel-footer">
-                <div class="clearfix">
-                    <div class="pull-right">
-                        <button class="btn btn-primary" ng-click="Save()">
-                            <i class="fa fa-save"></i>
-                            Save
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </mg-panel>
+        </div>
     </mg-form>
 </mg-controller>
-<pre>{{EntityTypes}}</pre>
