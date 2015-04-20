@@ -234,10 +234,10 @@ BEGIN
  SET NOCOUNT ON
 	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
  SELECT
-	 [Name],
+	 [UserId] = [Id],
+		[Password],
 		[Forename],
 		[Surname],
-		[Password],
 		[Reset]
 	FROM [User]
 	WHERE [Email] = @Email

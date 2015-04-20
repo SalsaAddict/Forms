@@ -1,6 +1,6 @@
 ﻿using System.Web;
 
-namespace mg
+namespace MG
 {
 
     public class hash : IHttpHandler

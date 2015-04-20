@@ -1,1 +1,1 @@
-﻿<%@ WebHandler Language="C#" CodeBehind="exec.ashx.cs" Class="mg.exec" %>
+﻿<%@ WebHandler Language="C#" CodeBehind="exec.ashx.cs" Class="MG.exec" %>

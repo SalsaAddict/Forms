@@ -11,7 +11,7 @@
     <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>mg</RootNamespace>
+    <RootNamespace>MG</RootNamespace>
     <AssemblyName>Forms</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <UseIISExpress>true</UseIISExpress>
@@ -114,6 +114,7 @@
     <Compile Include="hash.ashx.cs">
       <DependentUpon>hash.ashx</DependentUpon>
     </Compile>
+    <Compile Include="App_Code\JWT.cs" />
     <Compile Include="login.ashx.cs">
       <DependentUpon>login.ashx</DependentUpon>
     </Compile>

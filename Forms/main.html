@@ -72,7 +72,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-primary btn-sm" ng-click="login()">Login</button>
+
+                <button class="btn btn-primary btn-sm" ng-click="login()" ng-disabled="LoginForm.$pristine || LoginForm.$invalid">Login</button>
             </div>
         </form>
     </script>

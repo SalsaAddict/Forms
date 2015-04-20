@@ -1,4 +1,4 @@
-﻿var myApp = angular.module("myApp", ["ngRoute", "ngResource", "ngStorage", "ui.bootstrap"]);
+﻿var myApp = angular.module("myApp", ["ngRoute", "ngResource", "ui.bootstrap"]);
 
 myApp.config(function ($logProvider, $routeProvider) {
     $logProvider.debugEnabled(true);
