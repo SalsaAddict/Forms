@@ -9,7 +9,7 @@ using System.Web;
 using System.Web.Configuration;
 using System.Xml;
 
-namespace Forms
+namespace mg
 {
 
     public class exec : IHttpHandler

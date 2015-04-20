@@ -2,6 +2,8 @@
 USE [Claimsuite]
 GO
 
+IF OBJECT_ID(N'apiUser', N'P') IS NOT NULL DROP PROCEDURE [apiUser]
+IF OBJECT_ID(N'User', N'U') IS NOT NULL DROP TABLE [User]
 IF OBJECT_ID(N'apiEntityDelete', N'P') IS NOT NULL DROP PROCEDURE [apiEntityDelete]
 IF OBJECT_ID(N'apiEntityUpdate', N'P') IS NOT NULL DROP PROCEDURE [apiEntityUpdate]
 IF OBJECT_ID(N'apiEntityInsert', N'P') IS NOT NULL DROP PROCEDURE [apiEntityInsert]
@@ -205,3 +207,41 @@ GO
 EXEC [apiEntityInsert] @Name = N'Whitespace Software Limited'
 EXEC [apiEntityUpdate] 1, @LBR = 1
 EXEC [apiEntityInsert] @Name = N'Datarise Limited', @CountryId = N'US'
+GO
+
+CREATE TABLE [User] (
+  [Id] INT NOT NULL IDENTITY (1, 1),
+  [Email] NVARCHAR(255) NOT NULL,
+		[Name] AS [Forename] + N' ' + [Surname] PERSISTED,
+		[Forename] NVARCHAR(127) NOT NULL,
+		[Surname] NVARCHAR(127) NOT NULL,
+		[Password] NVARCHAR(max) NOT NULL,
+		[Reset] BIT NOT NULL CONSTRAINT [DF_User_Reset] DEFAULT (1),
+		CONSTRAINT [PK_User] PRIMARY KEY NONCLUSTERED ([Id]),
+		CONSTRAINT [UQ_User_Email] UNIQUE CLUSTERED ([Email])
+ )
+GO
+
+INSERT INTO [User] ([Email], [Password], [Reset], [Forename], [Surname])
+OUTPUT [inserted].*
+VALUES
+ (N'pierre@whitespace.co.uk', N'1000:hk+D8z0NIR1TXcZEoLWv1S/yn2y3L7nA:1NY7qD4GdoxieaaT3Mn64pcz75aq4GfZ', 0, N'Pierre', N'Henry')
+GO
+
+CREATE PROCEDURE [apiUser](@Email NVARCHAR(255))
+AS
+BEGIN
+ SET NOCOUNT ON
+	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+ SELECT
+	 [Name],
+		[Forename],
+		[Surname],
+		[Password],
+		[Reset]
+	FROM [User]
+	WHERE [Email] = @Email
+	RETURN
+END
+GO
+

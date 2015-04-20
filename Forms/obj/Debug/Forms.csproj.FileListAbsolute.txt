@@ -7,6 +7,5 @@ C:\Users\Pierre\Documents\GitHub\Forms\Forms\obj\Debug\Forms.pdb
 \\psf\Home\Documents\GitHub\Forms\Forms\bin\Forms.dll.config
 \\psf\Home\Documents\GitHub\Forms\Forms\bin\Forms.dll
 \\psf\Home\Documents\GitHub\Forms\Forms\bin\Forms.pdb
-\\psf\Home\Documents\GitHub\Forms\Forms\obj\Debug\Forms.csprojResolveAssemblyReference.cache
 \\psf\Home\Documents\GitHub\Forms\Forms\obj\Debug\Forms.dll
 \\psf\Home\Documents\GitHub\Forms\Forms\obj\Debug\Forms.pdb

@@ -1,4 +1,4 @@
-﻿var myApp = angular.module("myApp", ["ngRoute", "ngStorage", "ui.bootstrap"]);
+﻿var myApp = angular.module("myApp", ["ngRoute", "ngResource", "ngStorage", "ui.bootstrap"]);
 
 myApp.config(function ($logProvider, $routeProvider) {
     $logProvider.debugEnabled(true);
@@ -11,6 +11,27 @@ myApp.config(function ($logProvider, $routeProvider) {
         .otherwise({ redirectTo: "/home" });
 });
 
+myApp.controller("MainController", ["$scope", "$modal", function ($scope, $modal) {
+
+    $scope.login = function () {
+        var modalLogin = $modal.open({
+            templateUrl: "/login.html",
+            controller: "LoginController"
+        });
+    };
+
+}]);
+
+myApp.controller("LoginController", ["$scope", "$http", function ($scope, $http) {
+
+    $scope.login = function (email, password) {
+        $http.post("login.ashx", { Email: $scope.email, Password: $scope.password })
+            .success(function (response) {
+                window.alert(JSON.stringify(response));
+            });
+    };
+
+}]);
 
 myApp.controller("EntityController", ["$scope", "$routeParams", "$location", function ($scope, $routeParams, $location) {
 

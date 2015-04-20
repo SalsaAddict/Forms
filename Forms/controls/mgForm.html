@@ -2,7 +2,7 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <h4>
-                {{title}}
+                {{heading}}
                 <i class="fa fa-exclamation-circle text-danger" ng-show="form().$dirty && form().$invalid"></i>
             </h4>
         </div>
@@ -21,7 +21,7 @@
                     </button>
                     <button class="btn btn-warning mg-form-button" ng-click="undo()" ng-show="form().$dirty">
                         <i class="fa fa-undo"></i>
-                        Undo
+                        Cancel
                     </button>
                     <button class="btn btn-primary mg-form-button" ng-click="save()" ng-show="form().$dirty" ng-disabled="form().$invalid">
                         <i class="fa fa-save"></i>

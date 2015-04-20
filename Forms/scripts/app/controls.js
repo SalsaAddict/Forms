@@ -1,11 +1,15 @@
 ﻿myApp.service("DataService", ["$http", "$log", function ($http, $log) {
-    this.Execute = function (Name, Parameters, ReturnsXML) {
+    this.Execute = function (Name, Parameters, ReturnsXML, success, error) {
         var NVArray = [], XML = null;
         angular.forEach(Parameters, function (Value, Key) {
             if (Value) { if (Key == "XML") XML = Value; else NVArray.push({ Name: Key, Value: Value }); };
         });
         return $http.post("exec.ashx?rx=" + ((ReturnsXML === true) ? "true" : "false"), { Name: Name, Parameters: NVArray, XML: XML })
-            .error(function (Response) { $log.error(Response); });
+            .success(function (response) { if (angular.isFunction(success)) success(response); })
+            .error(function (response) {
+                $log.error(response);
+                if (angular.isFunction(error)) error(response);
+            });
     };
 }]);
 
@@ -19,7 +23,7 @@ myApp.directive("mgController", ["DataService", function () {
                 mgProcs[name] = options;
                 if (options.ngModel) $scope.$eval(options.ngModel + " = " + ((options.type === "array") ? "[]" : "{}"))
             };
-            $scope.Execute = this.Execute = function (name) {
+            $scope.Execute = this.Execute = function (name, success, error) {
                 var o = mgProcs[name], parameters = {}, shouldExecute = true;
                 angular.forEach(o.parameters, function (item) {
                     var value = null;
@@ -35,7 +39,7 @@ myApp.directive("mgController", ["DataService", function () {
                 });
                 if (shouldExecute === true) {
                     $log.debug("mgController:Execute:" + name);
-                    DataService.Execute(name, parameters, (o.type === "object") ? true : false)
+                    DataService.Execute(name, parameters, (o.type === "object") ? true : false, success, error)
                         .success(function (data) {
                             if (o.ngModel) {
                                 ngModel = $parse(o.ngModel);
@@ -121,7 +125,7 @@ myApp.directive("mgForm", ["$window", "$location", "$route", function ($window, 
         require: "^^mgController",
         templateUrl: "controls/mgForm.html",
         transclude: true,
-        scope: { name: "@", title: "@", backRoute: "@back", saveProc: "@", deleteProc: "@" },
+        scope: { name: "@", heading: "@", backRoute: "@back", saveProc: "@", deleteProc: "@", success: "=", error: "=" },
         controller: function ($scope) {
             this.form = $scope.form = function () { return $scope[$scope.name]; };
             $scope.editable = ($scope.saveProc) ? true : false;

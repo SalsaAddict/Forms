@@ -15,7 +15,7 @@
     <mg-proc name="apiEntityDelete">
         <mg-proc-param name="Id" type="route" value="EntityId"></mg-proc-param>
     </mg-proc>
-    <mg-form name="EntityForm" title="{{Entity.Name || 'New Entity'}}" back="/entities" save-proc="{{saveProc()}}" delete-proc="apiEntityDelete">
+    <mg-form name="EntityForm" heading="{{Entity.Name || 'New Entity'}}" back="/entities" save-proc="{{saveProc()}}" delete-proc="apiEntityDelete">
         <mg-field for="Name" text="Name">
             <input type="text" ng-model="Entity.Name" mg-control required />
         </mg-field>

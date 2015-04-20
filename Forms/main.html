@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="css/font-awesome.min.css" />
     <link rel="stylesheet" href="css/mg.css" />
 </head>
-<body style="padding-top: 80px">
+<body style="padding-top: 80px" ng-controller="MainController">
     <nav class="navbar navbar-default navbar-fixed-top">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -29,6 +29,9 @@
             </div>
             <div class="collapse navbar-collapse">
                 <ul class="nav navbar-nav">
+                    <li>
+                        <a href ng-click="login()">Login</a>
+                    </li>
                     <li>
                         <a href="#/home">Home</a>
                     </li>
@@ -44,9 +47,34 @@
     </div>
     <script src="scripts/angular.min.js"></script>
     <script src="scripts/angular-route.min.js"></script>
+    <script src="scripts/angular-resource.min.js"></script>
     <script src="scripts/ngStorage.min.js"></script>
     <script src="scripts/ui-bootstrap-tpls-0.12.1.min.js"></script>
     <script src="scripts/app/app.js"></script>
     <script src="scripts/app/controls.js"></script>
+    <script type="text/ng-template" id="/login.html">
+        <form name="LoginForm" class="form-horizontal" novalidate>
+            <div class="modal-header">
+                <h4 class="modal-title">Login</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" ng-class="{'has-error': LoginForm.$dirty && LoginForm.LoginEmail.$invalid}">
+                    <label for="LoginEmail" class="col-sm-3 control-label">Email</label>
+                    <div class="col-sm-9">
+                        <input type="email" id="LoginEmail" name="LoginEmail" class="form-control" placeholder="Email Address" ng-model="email" required />
+                    </div>
+                </div>
+                <div class="form-group" ng-class="{'has-error': LoginForm.$dirty && LoginForm.LoginPassword.$invalid}">
+                    <label for="LoginPassword" class="col-sm-3 control-label">Password</label>
+                    <div class="col-sm-9">
+                        <input type="password" id="LoginPassword" name="LoginPassword" class="form-control" placeholder="Password" ng-model="password" required />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-sm" ng-click="login()">Login</button>
+            </div>
+        </form>
+    </script>
 </body>
 </html>
