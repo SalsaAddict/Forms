@@ -10,17 +10,8 @@ namespace MG
     public class Payload
     {
         public int UserId { get; set; }
-
-        public int exp { get; set; }
-
         public Payload() { }
-
-        public Payload(int UserId)
-        {
-            int minutes = Convert.ToInt32(WebConfigurationManager.AppSettings["JWT_EXPIRY_MINUTES"]);
-            this.UserId = UserId;
-            this.exp = Convert.ToInt32(Math.Round((DateTime.UtcNow.AddMinutes(minutes) - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds, 0));
-        }
+        public Payload(int UserId) { this.UserId = UserId; }
     }
 
     public static class Security

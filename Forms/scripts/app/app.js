@@ -12,29 +12,28 @@ myApp.config(function ($logProvider, $routeProvider) {
         .otherwise({ redirectTo: "/home" });
 });
 
-myApp.service("AuthService", ["$window", function ($window) {
-
+myApp.controller("MainController", ["$scope", "$localStorage", "$location", function ($scope, $localStorage, $location) {
+    $scope.navBarCollapsed = true;
+    $scope.loggedIn = function () { return ($localStorage.JWT) ? true : false; };
+    $scope.logout = function () { $localStorage.JWT = null; $location.path("/login"); };
 }]);
 
-myApp.controller("LoginController", ["$scope", "$http", "$sessionStorage", "$localStorage", "$location", function ($scope, $http, $sessionStorage, $localStorage, $location) {
+myApp.controller("LoginController", ["$scope", "$http", "$localStorage", "$location", function ($scope, $http, $localStorage, $location) {
 
     $scope.failed = false;
-    $scope.$session = $sessionStorage.$default({ JWT: null, User: null });
-    $scope.$local = $localStorage.$default({ email: null });
+    $scope.$local = $localStorage.$default({ JWT: null, email: null });
     $scope.password = null;
 
     $scope.login = function () {
         $http.post("login.ashx", { Email: $scope.$local.email, Password: $scope.password })
             .success(function (response) {
                 if (response.Validated) {
-                    $scope.$session.JWT = response.JWT;
-                    $scope.$session.User = response.User;
+                    $scope.$local.JWT = response.JWT;
                     $location.path("/home");
                 }
                 else {
                     $scope.failed = true;
-                    $scope.$session.JWT = null;
-                    $scope.$session.User = null;
+                    $scope.$local.JWT = null;
                 };
             });
     };

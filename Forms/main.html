@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="css/font-awesome.min.css" />
     <link rel="stylesheet" href="css/mg.css" />
 </head>
-<body style="padding-top: 80px" ng-init="navBarCollapsed = true">
+<body style="padding-top: 80px" ng-controller="MainController">
     <nav class="navbar navbar-default navbar-fixed-top">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -28,10 +28,7 @@
                 <a href class="navbar-brand">Claimsuite</a>
             </div>
             <div class="collapse navbar-collapse" collapse="navBarCollapsed">
-                <ul class="nav navbar-nav">
-                    <li>
-                        <a href="#/login">Login</a>
-                    </li>
+                <ul class="nav navbar-nav" ng-show="loggedIn()">
                     <li>
                         <a href="#/home">Home</a>
                     </li>
@@ -39,6 +36,15 @@
                         <a href="#/entities">Entities</a>
                     </li>
                 </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li ng-hide="loggedIn()">
+                        <a href="#/login">Login</a>
+                    </li>
+                    <li ng-show="loggedIn()">
+                        <a href ng-click="logout()">Logout</a>
+                    </li>
+                </ul>
+
             </div>
         </div>
     </nav>
@@ -63,7 +69,7 @@
             <p>{{message}}</p>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-primary" ng-click="close()">{{buttonText || 'OK'}}</button>
+            <button class="btn btn-primary mg-form-button" ng-click="close()">{{buttonText || 'OK'}}</button>
         </div>
     </script>
 </body>

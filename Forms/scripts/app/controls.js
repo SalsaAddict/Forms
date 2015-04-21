@@ -1,6 +1,6 @@
-﻿myApp.service("DataService", ["$http", "$log", "$sessionStorage", "$location", "$modal", function ($http, $log, $sessionStorage, $location, $modal) {
+﻿myApp.service("DataService", ["$http", "$log", "$localStorage", "$location", "$modal", function ($http, $log, $localStorage, $location, $modal) {
     this.Execute = function (Name, Parameters, ReturnsXML, success, error) {
-        var JWT = $sessionStorage.$default({ JWT: null }).JWT;
+        var JWT = $localStorage.$default({ JWT: null }).JWT;
         var NVArray = [], XML = null;
         angular.forEach(Parameters, function (value, key) {
             if (value) {
@@ -8,28 +8,40 @@
                 NVArray.push({ Name: key, Value: value, XML: XML });
             };
         });
-        return $http.post("exec.ashx?rx=" + ((ReturnsXML === true) ? "true" : "false"), { JWT: JWT, Name: Name, Parameters: NVArray, XML: XML })
+        return $http.post("exec.ashx?rx=" + ((ReturnsXML === true) ? "true" : "false"), {
+            JWT: JWT,
+            Name: Name,
+            Parameters: NVArray,
+            XML: XML
+        })
             .success(function (response) { if (angular.isFunction(success)) success(response); })
             .error(function (response, status) {
                 $log.error(status + ":" + response);
+                $localStorage.JWT = null;
                 var messageBox = $modal.open({
                     templateUrl: "/messageBox.html",
                     controller: "MessageBoxController",
-                    size: "sm",
                     backdrop: "static",
                     resolve: {
-                        heading: function () { return "Access Denied"; },
+                        heading: function () {
+                            switch (status) {
+                                case 401: return "Access Denied"; break;
+                                default: return "Error"; break;
+                            };
+                        },
                         message: function () {
-                            switch (response) {
-                                case "Missing token.": return "You are not logged in. Please login and try again."; break;
-                                default: return response; break;
+                            switch (status) {
+                                case 401: return response; break;
+                                default: return "An unexpected error occurred. Please try again. If the problem persists, please contact the Claimsuite support team."; break;
                             };
                         },
                         buttonText: function () { return "OK"; }
                     }
                 })
-                .result.then(function (result) { $location.path("/login"); });
-                if (angular.isFunction(error)) error(response);
+                .result.then(function (result) {
+                    if (angular.isFunction(error)) error(response);
+                    if (status == 401) $location.path("/login");
+                });
             });
     };
 }]);

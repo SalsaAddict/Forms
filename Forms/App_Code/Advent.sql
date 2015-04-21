@@ -220,8 +220,11 @@ CREATE TABLE [User] (
 		[Reset] BIT NOT NULL CONSTRAINT [DF_User_Reset] DEFAULT (1),
 		[ValidFromUTC] DATETIME NOT NULL CONSTRAINT [DF_User_ValidFromUTC] DEFAULT (GETUTCDATE()),
 		[ValidUntilUTC] DATETIME NULL,
+		[LastAccessedUTC] DATETIME NULL,
 		CONSTRAINT [PK_User] PRIMARY KEY CLUSTERED ([Id]),
 		CONSTRAINT [UQ_User_Email] UNIQUE ([Email]),
+		CONSTRAINT [CK_User_ValidUntilUTC] CHECK ([ValidUntilUTC] >= [ValidFromUTC]),
+		CONSTRAINT [CK_User_LastAccessedUTC] CHECK ([LastAccessedUTC] BETWEEN [ValidFromUTC] AND ISNULL([ValidUntilUTC], GETUTCDATE()))
  )
 GO
 
@@ -236,15 +239,16 @@ BEGIN
  SET NOCOUNT ON
 	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
 	DECLARE @Now DATETIME; SET @Now = GETUTCDATE()
- SELECT
-	 [UserId] = [Id],
-  [Name],
-		[Password],
-		[Reset]
-	FROM [User]
+	UPDATE [User]
+	SET [LastAccessedUTC] = @Now
+ OUTPUT
+	 [inserted].[Id] AS [UserId],
+  [inserted].[Name],
+		[inserted].[Password],
+		[inserted].[Reset]
 	WHERE [Email] = @Email
 	 AND [ValidFromUTC] <= @Now
-	 AND ISNULL([ValidUntilUTC], @Now) >= @Now
+		AND ISNULL([ValidUntilUTC], @Now) >= @Now
 	RETURN
 END
 GO
@@ -257,18 +261,21 @@ AS
 BEGIN
  SET NOCOUNT ON
 	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
- DECLARE @Now DATETIME, @Reset BIT, @ValidFromUTC DATETIME, @ValidUntilUTC DATETIME
+ DECLARE @Now DATETIME, @Reset BIT, @ValidFromUTC DATETIME, @ValidUntilUTC DATETIME, @LastAccessedUTC DATETIME
 	SELECT
 	 @Now = GETUTCDATE(),
 		@Reset = [Reset],
 		@ValidFromUTC = [ValidFromUTC],
-		@ValidUntilUTC = [ValidUntilUTC]
+		@ValidUntilUTC = [ValidUntilUTC],
+		@LastAccessedUTC = [LastAccessedUTC]
 	FROM [User]
 	WHERE [Id] = @UserId
 	IF @@ROWCOUNT = 0 RAISERROR(N'Invalid user.', 16, 1)
-	ELSE IF @ValidFromUTC > @Now RAISERROR(N'User is not valid yet.', 16, 1)
-	ELSE IF @Now > @ValidUntilUTC RAISERROR(N'User has expired.', 16, 1)
-	ELSE IF @Reset = 1 RAISERROR(N'Password must be reset.', 16, 1)
+	ELSE IF @ValidFromUTC > @Now RAISERROR(N'Your account is not yet active.', 16, 1)
+	ELSE IF @Now > @ValidUntilUTC RAISERROR(N'Your account has expired.', 16, 1)
+	ELSE IF @Now > DATEADD(minute, 15, @LastAccessedUTC) RAISERROR(N'Your session has expired. Please login and try again.', 16, 1)
+	ELSE IF @Reset = 1 RAISERROR(N'You must reset your password.', 16, 1)
+	ELSE UPDATE [User] SET [LastAccessedUTC] = GETUTCDATE() WHERE [Id] = @UserId
 	RETURN
 END
 GO

@@ -14,6 +14,7 @@ namespace MG
 
     public class exec : IHttpHandler
     {
+        private const string loginRetry = "Please login and try again.";
 
         private class Parameter
         {
@@ -57,31 +58,51 @@ namespace MG
                 {
                     try
                     {
-                        StoredProcedure Input;
-                        using (StreamReader Reader = new StreamReader(Context.Request.InputStream, Encoding.UTF8))
+                        StoredProcedure Procedure;
+
+                        try
                         {
-                            Input = JsonConvert.DeserializeObject<StoredProcedure>(Reader.ReadToEnd());
-                            Reader.Close();
-                        }
-                        if (string.IsNullOrWhiteSpace(Input.JWT)) throw new UnauthorizedAccessException("Missing token.");
-                        using (SqlCommand Command = new SqlCommand())
-                        {
-                            Command.Connection = Connection;
-                            Command.Transaction = Transaction;
-                            Command.CommandType = CommandType.StoredProcedure;
-                            Command.CommandText = "apiUserVerify";
-                            Command.Parameters.AddWithValue("UserId", Security.UserIdFromToken(Input.JWT));
-                            Command.ExecuteNonQuery();
-                        }
-                        using (SqlCommand Command = new SqlCommand())
-                        {
-                            Command.Connection = Connection;
-                            Command.Transaction = Transaction;
-                            Command.CommandType = CommandType.StoredProcedure;
-                            Command.CommandText = Input.Name;
-                            if (Input.Parameters != null)
+                            using (StreamReader Reader = new StreamReader(Context.Request.InputStream, Encoding.UTF8))
                             {
-                                foreach (Parameter Parameter in Input.Parameters)
+                                Procedure = JsonConvert.DeserializeObject<StoredProcedure>(Reader.ReadToEnd());
+                            }
+                        }
+                        catch { throw new UnauthorizedAccessException(loginRetry); }
+
+                        if (string.IsNullOrWhiteSpace(Procedure.JWT))
+                            throw new UnauthorizedAccessException(loginRetry);
+
+                        int UserId;
+                        try
+                        {
+                            UserId = Security.UserIdFromToken(Procedure.JWT);
+                            if (UserId <= 0) throw new UnauthorizedAccessException(loginRetry);
+                        }
+                        catch { throw new UnauthorizedAccessException(loginRetry); }
+
+                        try
+                        {
+                            using (SqlCommand Command = new SqlCommand())
+                            {
+                                Command.Connection = Connection;
+                                Command.Transaction = Transaction;
+                                Command.CommandType = CommandType.StoredProcedure;
+                                Command.CommandText = "apiUserVerify";
+                                Command.Parameters.AddWithValue("UserId", UserId);
+                                Command.ExecuteNonQuery();
+                            }
+                        }
+                        catch (SqlException ex) { throw new UnauthorizedAccessException(ex.Message); }
+
+                        using (SqlCommand Command = new SqlCommand())
+                        {
+                            Command.Connection = Connection;
+                            Command.Transaction = Transaction;
+                            Command.CommandType = CommandType.StoredProcedure;
+                            Command.CommandText = Procedure.Name;
+                            if (Procedure.Parameters != null)
+                            {
+                                foreach (Parameter Parameter in Procedure.Parameters)
                                 {
                                     if (Parameter.XML)
                                         Command.Parameters.AddWithValue(Parameter.Name, JsonConvert.DeserializeXmlNode(JsonConvert.SerializeObject(Parameter.Value), null, true).InnerXml);
@@ -89,42 +110,30 @@ namespace MG
                                         Command.Parameters.AddWithValue(Parameter.Name, Parameter.Value);
                                 }
                             }
-                            bool ReturnsXml;
-                            if (!bool.TryParse(Context.Request.QueryString["rx"], out ReturnsXml)) ReturnsXml = false;
-                            if (ReturnsXml)
+                            using (SqlDataReader Reader = Command.ExecuteReader(CommandBehavior.SingleResult))
                             {
-                                using (XmlReader Reader = Command.ExecuteXmlReader())
+                                string Output;
+                                if (Reader.FieldCount == 1 && Reader.GetDataTypeName(0) == "xml")
                                 {
                                     XmlDocument Document = new XmlDocument();
-                                    Document.Load(Reader);
-                                    Reader.Close();
-                                    string Output = JsonConvert.SerializeXmlNode(Document, Newtonsoft.Json.Formatting.Indented, false);
-                                    Context.Response.ContentType = "text/json";
-                                    Context.Response.Write(Output);
+                                    Document.Load(Reader.GetXmlReader(0));
+                                    Output = JsonConvert.SerializeXmlNode(Document, Newtonsoft.Json.Formatting.Indented, false);
                                 }
-                            }
-                            else
-                            {
-                                using (SqlDataReader Reader = Command.ExecuteReader(CommandBehavior.SingleResult))
+                                else
                                 {
                                     using (DataTable Table = new DataTable())
                                     {
                                         Table.Load(Reader);
-                                        string Output = JsonConvert.SerializeObject(Table, Newtonsoft.Json.Formatting.Indented);
-                                        Context.Response.ContentType = "text/json";
-                                        Context.Response.Write(Output);
+                                        Output = JsonConvert.SerializeObject(Table, Newtonsoft.Json.Formatting.Indented);
                                     }
                                 }
+                                Context.Response.ContentType = "text/json";
+                                Context.Response.Write(Output);
                             }
                         }
                         Transaction.Commit();
                     }
                     catch (UnauthorizedAccessException ex)
-                    {
-                        Transaction.Rollback();
-                        ErrorResponse(Context, 401, ex.Message);
-                    }
-                    catch (JWT.SignatureVerificationException ex)
                     {
                         Transaction.Rollback();
                         ErrorResponse(Context, 401, ex.Message);
