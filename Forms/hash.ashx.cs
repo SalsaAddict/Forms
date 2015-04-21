@@ -9,8 +9,8 @@ namespace MG
         public void ProcessRequest(HttpContext Context)
         {
             string Password = Context.Request.QueryString[0];
-            string Hash = PasswordHash.CreateHash(Password);
-            bool Compare = PasswordHash.ValidatePassword(Password, Hash);
+            string Hash = Security.HashPassword(Password);
+            bool Compare = Security.ValidatePassword(Password, Hash);
             Context.Response.ContentType = "text/plain";
             Context.Response.Write(string.Format("Original: {0}\r\nHash: {1}\r\nCompare: {2}", Password, Hash, Compare));
         }

@@ -1,0 +1,33 @@
+﻿<form name="LoginForm" class="form-horizontal" novalidate>
+    <div class="row">
+        <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3">
+            <alert type="danger" ng-show="failed" close="failed = false">Invalid email address or password</alert>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4>Login</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group" ng-class="{'has-error': LoginForm.$dirty && LoginForm.LoginEmail.$invalid}">
+                        <label for="LoginEmail" class="col-sm-4 control-label">Email Address</label>
+                        <div class="col-sm-8">
+                            <input type="email" id="LoginEmail" name="LoginEmail" class="form-control" placeholder="Email Address" ng-model="$local.email" required />
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': LoginForm.$dirty && LoginForm.LoginPassword.$invalid}">
+                        <label for="LoginPassword" class="col-sm-4 control-label">Password</label>
+                        <div class="col-sm-8">
+                            <input type="password" id="LoginPassword" name="LoginPassword" class="form-control" placeholder="Password" ng-model="password" required />
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <div class="clearfix">
+                        <div class="pull-right">
+                            <button class="btn btn-primary mg-form-button" ng-click="login()" ng-disabled="LoginForm.$pristine || LoginForm.$invalid">Login</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

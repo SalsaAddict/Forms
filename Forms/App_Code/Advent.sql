@@ -2,7 +2,8 @@
 USE [Claimsuite]
 GO
 
-IF OBJECT_ID(N'apiUser', N'P') IS NOT NULL DROP PROCEDURE [apiUser]
+IF OBJECT_ID(N'apiUserVerify', N'P') IS NOT NULL DROP PROCEDURE [apiUserVerify]
+IF OBJECT_ID(N'apiUserLogin', N'P') IS NOT NULL DROP PROCEDURE [apiUserLogin]
 IF OBJECT_ID(N'User', N'U') IS NOT NULL DROP TABLE [User]
 IF OBJECT_ID(N'apiEntityDelete', N'P') IS NOT NULL DROP PROCEDURE [apiEntityDelete]
 IF OBJECT_ID(N'apiEntityUpdate', N'P') IS NOT NULL DROP PROCEDURE [apiEntityUpdate]
@@ -217,31 +218,64 @@ CREATE TABLE [User] (
 		[Surname] NVARCHAR(127) NOT NULL,
 		[Password] NVARCHAR(max) NOT NULL,
 		[Reset] BIT NOT NULL CONSTRAINT [DF_User_Reset] DEFAULT (1),
-		CONSTRAINT [PK_User] PRIMARY KEY NONCLUSTERED ([Id]),
-		CONSTRAINT [UQ_User_Email] UNIQUE CLUSTERED ([Email])
+		[ValidFromUTC] DATETIME NOT NULL CONSTRAINT [DF_User_ValidFromUTC] DEFAULT (GETUTCDATE()),
+		[ValidUntilUTC] DATETIME NULL,
+		CONSTRAINT [PK_User] PRIMARY KEY CLUSTERED ([Id]),
+		CONSTRAINT [UQ_User_Email] UNIQUE ([Email]),
  )
 GO
 
 INSERT INTO [User] ([Email], [Password], [Reset], [Forename], [Surname])
-OUTPUT [inserted].*
 VALUES
  (N'pierre@whitespace.co.uk', N'1000:hk+D8z0NIR1TXcZEoLWv1S/yn2y3L7nA:1NY7qD4GdoxieaaT3Mn64pcz75aq4GfZ', 0, N'Pierre', N'Henry')
 GO
 
-CREATE PROCEDURE [apiUser](@Email NVARCHAR(255))
+CREATE PROCEDURE [apiUserLogin](@Email NVARCHAR(255))
 AS
 BEGIN
  SET NOCOUNT ON
 	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+	DECLARE @Now DATETIME; SET @Now = GETUTCDATE()
  SELECT
 	 [UserId] = [Id],
+  [Name],
 		[Password],
-		[Forename],
-		[Surname],
 		[Reset]
 	FROM [User]
 	WHERE [Email] = @Email
+	 AND [ValidFromUTC] <= @Now
+	 AND ISNULL([ValidUntilUTC], @Now) >= @Now
 	RETURN
 END
 GO
 
+EXEC [apiUserLogin] N'pierre@whitespace.co.uk'
+GO
+
+CREATE PROCEDURE [apiUserVerify](@UserId INT)
+AS
+BEGIN
+ SET NOCOUNT ON
+	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+ DECLARE @Now DATETIME, @Reset BIT, @ValidFromUTC DATETIME, @ValidUntilUTC DATETIME
+	SELECT
+	 @Now = GETUTCDATE(),
+		@Reset = [Reset],
+		@ValidFromUTC = [ValidFromUTC],
+		@ValidUntilUTC = [ValidUntilUTC]
+	FROM [User]
+	WHERE [Id] = @UserId
+	IF @@ROWCOUNT = 0 RAISERROR(N'Invalid user.', 16, 1)
+	ELSE IF @ValidFromUTC > @Now RAISERROR(N'User is not valid yet.', 16, 1)
+	ELSE IF @Now > @ValidUntilUTC RAISERROR(N'User has expired.', 16, 1)
+	ELSE IF @Reset = 1 RAISERROR(N'Password must be reset.', 16, 1)
+	RETURN
+END
+GO
+
+EXEC [apiUserVerify] 1
+GO
+
+SELECT * FROM [User]
+
+UPDATE [User] SET [ValidFromUTC] = N'2014-01-01', [ValidUntilUTC] = NULL, [Reset] = 0 WHERE [Id] = 1

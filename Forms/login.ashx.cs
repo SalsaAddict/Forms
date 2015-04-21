@@ -1,14 +1,11 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.IO;
-using System.Text;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
+using System.Text;
+using System.Web;
 using System.Web.Configuration;
-using JWT;
 
 namespace MG
 {
@@ -16,7 +13,7 @@ namespace MG
     public class login : IHttpHandler
     {
 
-        private class MGLogin
+        private class LoginRequest
         {
             [JsonProperty("Email")]
             public string Email { get; set; }
@@ -25,90 +22,74 @@ namespace MG
             public string Password { get; set; }
         }
 
-        private class MGUser
-        {
-            [JsonProperty("UserId")]
-            public int UserId { get; set; }
-
-            [JsonProperty("Forename")]
-            public string Forename { get; set; }
-
-            [JsonProperty("Surname")]
-            public string Surname { get; set; }
-
-            [JsonProperty("Reset")]
-            public bool Reset { get; set; }
-        }
-
-        private class MGResult
+        private class LoginResponse
         {
             [JsonProperty("Validated")]
             public bool Validated { get; set; }
 
+            [JsonProperty("Reset")]
+            public bool Reset { get; set; }
+
             [JsonProperty("JWT")]
             public string JWT { get; set; }
 
-            [JsonProperty("User")]
-            public MGUser User { get; set; }
+            [JsonProperty("Error")]
+            public string Error { get; set; }
 
-            public MGResult()
+            public LoginResponse()
             {
                 this.Validated = false;
-                this.JWT = null;
-                this.User = null;
+                this.Reset = false;
+                this.JWT = string.Empty;
             }
         }
 
         public void ProcessRequest(HttpContext Context)
         {
-            MGResult Result = new MGResult();
-            using (SqlConnection Connection = new SqlConnection(WebConfigurationManager.ConnectionStrings["Database"].ConnectionString))
+            LoginResponse Response = new LoginResponse();
+            try
             {
-                Connection.Open();
-                using (SqlTransaction Transaction = Connection.BeginTransaction(IsolationLevel.Serializable))
+                using (SqlConnection Connection = new SqlConnection(WebConfigurationManager.ConnectionStrings["Database"].ConnectionString))
                 {
-                    try
+                    Connection.Open();
+                    using (SqlTransaction Transaction = Connection.BeginTransaction(IsolationLevel.ReadUncommitted))
                     {
                         using (SqlCommand Command = new SqlCommand())
                         {
-                            MGLogin Login;
+                            LoginRequest Request;
                             using (StreamReader Reader = new StreamReader(Context.Request.InputStream, Encoding.UTF8))
                             {
-                                Login = JsonConvert.DeserializeObject<MGLogin>(Reader.ReadToEnd());
+                                Request = JsonConvert.DeserializeObject<LoginRequest>(Reader.ReadToEnd());
                                 Reader.Close();
                             }
                             Command.Connection = Connection;
                             Command.Transaction = Transaction;
                             Command.CommandType = CommandType.StoredProcedure;
-                            Command.CommandText = "apiUser";
-                            Command.Parameters.AddWithValue("Email", Login.Email);
+                            Command.CommandText = "apiUserLogin";
+                            Command.Parameters.AddWithValue("Email", Request.Email);
                             using (SqlDataReader Reader = Command.ExecuteReader(CommandBehavior.SingleRow))
                             {
                                 if (Reader.HasRows)
                                 {
                                     Reader.Read();
-                                    if (PasswordHash.ValidatePassword(Login.Password, Reader.GetString(Reader.GetOrdinal("Password"))))
+                                    if (Security.ValidatePassword(Request.Password, Reader.GetString(Reader.GetOrdinal("Password"))))
                                     {
-                                        Result.User = new MGUser();
-                                        Result.User.UserId = Reader.GetInt32(Reader.GetOrdinal("UserId"));
-                                        Result.User.Forename = Reader.GetString(Reader.GetOrdinal("Forename"));
-                                        Result.User.Surname = Reader.GetString(Reader.GetOrdinal("Surname"));
-                                        Result.User.Reset = Reader.GetBoolean(Reader.GetOrdinal("Reset"));
-                                        Result.JWT = JsonWebToken.Encode(Result.User, WebConfigurationManager.AppSettings["JWTEncryptionKey"], JwtHashAlgorithm.HS512);
-                                        Result.Validated = true;
-
+                                        Response.Validated = true;
+                                        Response.Reset = Reader.GetBoolean(Reader.GetOrdinal("Reset"));
+                                        Response.JWT = Security.Token(Reader.GetInt32(Reader.GetOrdinal("UserId")));
                                     }
                                 }
+                                Reader.Close();
                             }
                         }
                         Transaction.Commit();
                     }
-                    catch (Exception ex) { }
+                    Connection.Close();
                 }
-                Connection.Close();
             }
+            catch (Exception ex) { Response = new LoginResponse(); }
             Context.Response.ContentType = "text/json";
-            Context.Response.Write(JsonConvert.SerializeObject(Result, Newtonsoft.Json.Formatting.Indented));
+            Context.Response.Write(JsonConvert.SerializeObject(Response, Newtonsoft.Json.Formatting.Indented));
         }
 
         public bool IsReusable { get { return false; } }

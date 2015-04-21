@@ -1,8 +1,9 @@
-﻿var myApp = angular.module("myApp", ["ngRoute", "ngResource", "ui.bootstrap"]);
+﻿var myApp = angular.module("myApp", ["ngRoute", "ngStorage", "ui.bootstrap"]);
 
 myApp.config(function ($logProvider, $routeProvider) {
     $logProvider.debugEnabled(true);
     $routeProvider
+        .when("/login", { caseInsensitiveMatch: true, templateUrl: "views/login.html", controller: "LoginController" })
         .when("/home", { caseInsensitiveMatch: true, templateUrl: "views/home.html" })
         .when("/exec", { caseInsensitiveMatch: true, templateUrl: "views/exec.html" })
         .when("/entities", { caseInsensitiveMatch: true, templateUrl: "views/entities.html" })
@@ -11,23 +12,30 @@ myApp.config(function ($logProvider, $routeProvider) {
         .otherwise({ redirectTo: "/home" });
 });
 
-myApp.controller("MainController", ["$scope", "$modal", function ($scope, $modal) {
-
-    $scope.login = function () {
-        var modalLogin = $modal.open({
-            templateUrl: "/login.html",
-            controller: "LoginController"
-        });
-    };
+myApp.service("AuthService", ["$window", function ($window) {
 
 }]);
 
-myApp.controller("LoginController", ["$scope", "$http", function ($scope, $http) {
+myApp.controller("LoginController", ["$scope", "$http", "$sessionStorage", "$localStorage", "$location", function ($scope, $http, $sessionStorage, $localStorage, $location) {
 
-    $scope.login = function (email, password) {
-        $http.post("login.ashx", { Email: $scope.email, Password: $scope.password })
+    $scope.failed = false;
+    $scope.$session = $sessionStorage.$default({ JWT: null, User: null });
+    $scope.$local = $localStorage.$default({ email: null });
+    $scope.password = null;
+
+    $scope.login = function () {
+        $http.post("login.ashx", { Email: $scope.$local.email, Password: $scope.password })
             .success(function (response) {
-                window.alert(JSON.stringify(response));
+                if (response.Validated) {
+                    $scope.$session.JWT = response.JWT;
+                    $scope.$session.User = response.User;
+                    $location.path("/home");
+                }
+                else {
+                    $scope.failed = true;
+                    $scope.$session.JWT = null;
+                    $scope.$session.User = null;
+                };
             });
     };
 

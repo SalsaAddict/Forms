@@ -1,17 +1,45 @@
-﻿myApp.service("DataService", ["$http", "$log", function ($http, $log) {
+﻿myApp.service("DataService", ["$http", "$log", "$sessionStorage", "$location", "$modal", function ($http, $log, $sessionStorage, $location, $modal) {
     this.Execute = function (Name, Parameters, ReturnsXML, success, error) {
+        var JWT = $sessionStorage.$default({ JWT: null }).JWT;
         var NVArray = [], XML = null;
-        angular.forEach(Parameters, function (Value, Key) {
-            if (Value) { if (Key == "XML") XML = Value; else NVArray.push({ Name: Key, Value: Value }); };
+        angular.forEach(Parameters, function (value, key) {
+            if (value) {
+                var XML = angular.isObject(value);
+                NVArray.push({ Name: key, Value: value, XML: XML });
+            };
         });
-        return $http.post("exec.ashx?rx=" + ((ReturnsXML === true) ? "true" : "false"), { Name: Name, Parameters: NVArray, XML: XML })
+        return $http.post("exec.ashx?rx=" + ((ReturnsXML === true) ? "true" : "false"), { JWT: JWT, Name: Name, Parameters: NVArray, XML: XML })
             .success(function (response) { if (angular.isFunction(success)) success(response); })
-            .error(function (response) {
-                $log.error(response);
+            .error(function (response, status) {
+                $log.error(status + ":" + response);
+                var messageBox = $modal.open({
+                    templateUrl: "/messageBox.html",
+                    controller: "MessageBoxController",
+                    size: "sm",
+                    backdrop: "static",
+                    resolve: {
+                        heading: function () { return "Access Denied"; },
+                        message: function () {
+                            switch (response) {
+                                case "Missing token.": return "You are not logged in. Please login and try again."; break;
+                                default: return response; break;
+                            };
+                        },
+                        buttonText: function () { return "OK"; }
+                    }
+                })
+                .result.then(function (result) { $location.path("/login"); });
                 if (angular.isFunction(error)) error(response);
             });
     };
 }]);
+
+myApp.controller("MessageBoxController", function ($scope, $modalInstance, heading, message, buttonText) {
+    $scope.heading = heading;
+    $scope.message = message;
+    $scope.buttonText = buttonText;
+    $scope.close = function () { $modalInstance.close(); };
+});
 
 myApp.directive("mgController", ["DataService", function () {
     return {

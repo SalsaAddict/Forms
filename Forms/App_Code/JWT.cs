@@ -6,12 +6,7 @@ using System.Web.Script.Serialization;
 
 namespace JWT
 {
-    public enum JwtHashAlgorithm
-    {
-        HS256,
-        HS384,
-        HS512
-    }
+    public enum JwtHashAlgorithm { HS256, HS384, HS512 }
 
     /// <summary>
     /// Provides methods for encoding and decoding JSON Web Tokens.
@@ -216,9 +211,6 @@ namespace JWT
 
     public class SignatureVerificationException : Exception
     {
-        public SignatureVerificationException(string message)
-            : base(message)
-        {
-        }
+        public SignatureVerificationException(string message) : base(message) { }
     }
 }

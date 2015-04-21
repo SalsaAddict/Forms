@@ -15,11 +15,11 @@
     <link rel="stylesheet" href="css/font-awesome.min.css" />
     <link rel="stylesheet" href="css/mg.css" />
 </head>
-<body style="padding-top: 80px" ng-controller="MainController">
+<body style="padding-top: 80px" ng-init="navBarCollapsed = true">
     <nav class="navbar navbar-default navbar-fixed-top">
         <div class="container-fluid">
             <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                <button type="button" class="navbar-toggle" ng-click="navBarCollapsed = !navBarCollapsed">
                     <span class="sr-only">Toggle navigation</span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
@@ -27,10 +27,10 @@
                 </button>
                 <a href class="navbar-brand">Claimsuite</a>
             </div>
-            <div class="collapse navbar-collapse">
+            <div class="collapse navbar-collapse" collapse="navBarCollapsed">
                 <ul class="nav navbar-nav">
                     <li>
-                        <a href ng-click="login()">Login</a>
+                        <a href="#/login">Login</a>
                     </li>
                     <li>
                         <a href="#/home">Home</a>
@@ -52,30 +52,19 @@
     <script src="scripts/ui-bootstrap-tpls-0.12.1.min.js"></script>
     <script src="scripts/app/app.js"></script>
     <script src="scripts/app/controls.js"></script>
-    <script type="text/ng-template" id="/login.html">
-        <form name="LoginForm" class="form-horizontal" novalidate>
-            <div class="modal-header">
-                <h4 class="modal-title">Login</h4>
-            </div>
-            <div class="modal-body">
-                <div class="form-group" ng-class="{'has-error': LoginForm.$dirty && LoginForm.LoginEmail.$invalid}">
-                    <label for="LoginEmail" class="col-sm-3 control-label">Email</label>
-                    <div class="col-sm-9">
-                        <input type="email" id="LoginEmail" name="LoginEmail" class="form-control" placeholder="Email Address" ng-model="email" required />
-                    </div>
-                </div>
-                <div class="form-group" ng-class="{'has-error': LoginForm.$dirty && LoginForm.LoginPassword.$invalid}">
-                    <label for="LoginPassword" class="col-sm-3 control-label">Password</label>
-                    <div class="col-sm-9">
-                        <input type="password" id="LoginPassword" name="LoginPassword" class="form-control" placeholder="Password" ng-model="password" required />
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-
-                <button class="btn btn-primary btn-sm" ng-click="login()" ng-disabled="LoginForm.$pristine || LoginForm.$invalid">Login</button>
-            </div>
-        </form>
+    <script type="text/ng-template" id="/messageBox.html">
+        <div class="modal-header">
+            <h4>
+                <i class="fa fa-exclamation-triangle text-danger"></i>
+                {{heading}}
+            </h4>
+        </div>
+        <div class="modal-body">
+            <p>{{message}}</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" ng-click="close()">{{buttonText || 'OK'}}</button>
+        </div>
     </script>
 </body>
 </html>
