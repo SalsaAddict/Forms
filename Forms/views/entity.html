@@ -4,7 +4,8 @@
     </mg-proc>
     <mg-proc name="apiEntityTypes" ng-model="Types" autoexec="true"></mg-proc>
     <mg-proc name="apiCountries" ng-model="Countries" autoexec="true"></mg-proc>
-    <mg-proc name="{{saveProc()}}" ng-model="Saved">
+    <mg-proc name="{{saveProc()}}" type="singleton" ng-model="Entity">
+        <mg-proc-param name="UserId"></mg-proc-param>
         <mg-proc-param name="Id" type="route" value="EntityId" ng-if="!inserting()"></mg-proc-param>
         <mg-proc-param name="Name" type="scope" value="Entity.Name"></mg-proc-param>
         <mg-proc-param name="Address" type="scope" value="Entity.Address"></mg-proc-param>

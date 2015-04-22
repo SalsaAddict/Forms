@@ -38,6 +38,13 @@ namespace MG
 
             [JsonProperty("Parameters")]
             public List<Parameter> Parameters { get; set; }
+
+            public StoredProcedure()
+            {
+                this.JWT = null;
+                this.Name = null;
+                this.Parameters = new List<Parameter>();
+            }
         }
 
         private void ErrorResponse(HttpContext Context, int StatusCode, string Message)
@@ -89,6 +96,7 @@ namespace MG
                                 Command.CommandType = CommandType.StoredProcedure;
                                 Command.CommandText = "apiUserVerify";
                                 Command.Parameters.AddWithValue("UserId", UserId);
+                                Command.Parameters.AddWithValue("Timeout", Convert.ToByte(WebConfigurationManager.AppSettings["LOGIN_TIMEOUT"]));
                                 Command.ExecuteNonQuery();
                             }
                         }
@@ -100,15 +108,15 @@ namespace MG
                             Command.Transaction = Transaction;
                             Command.CommandType = CommandType.StoredProcedure;
                             Command.CommandText = Procedure.Name;
-                            if (Procedure.Parameters != null)
+                            foreach (Parameter Parameter in Procedure.Parameters)
                             {
-                                foreach (Parameter Parameter in Procedure.Parameters)
-                                {
-                                    if (Parameter.XML)
-                                        Command.Parameters.AddWithValue(Parameter.Name, JsonConvert.DeserializeXmlNode(JsonConvert.SerializeObject(Parameter.Value), null, true).InnerXml);
-                                    else
-                                        Command.Parameters.AddWithValue(Parameter.Name, Parameter.Value);
-                                }
+                                if (Parameter.Name == "UserId")
+                                    Command.Parameters.AddWithValue("UserId", UserId);
+                                else if (Parameter.XML)
+                                    Command.Parameters.AddWithValue(Parameter.Name,
+                                        JsonConvert.DeserializeXmlNode(JsonConvert.SerializeObject(Parameter.Value), null, true).InnerXml);
+                                else
+                                    Command.Parameters.AddWithValue(Parameter.Name, Parameter.Value);
                             }
                             using (SqlDataReader Reader = Command.ExecuteReader(CommandBehavior.SingleResult))
                             {

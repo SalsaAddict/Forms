@@ -9,6 +9,7 @@ myApp.config(function ($logProvider, $routeProvider) {
         .when("/entities", { caseInsensitiveMatch: true, templateUrl: "views/entities.html" })
         .when("/entity", { caseInsensitiveMatch: true, templateUrl: "views/entity.html", controller: "EntityController" })
         .when("/entity/:EntityId", { caseInsensitiveMatch: true, templateUrl: "views/entity.html", controller: "EntityController" })
+        .when("/test/:First?/:Second?", { caseInsensitiveMatch: true, templateUrl: "views/test.html", controller: "TestController" })
         .otherwise({ redirectTo: "/home" });
 });
 
@@ -55,3 +56,15 @@ myApp.controller("EntityController", ["$scope", "$routeParams", "$location", fun
     };
 
 }]);
+
+myApp.controller("TestController", ["$scope", "$routeParams", "Procedure", function ($scope, $routeParams, Procedure) {
+
+    $scope.routeParams = $routeParams;
+    $scope.Id = 1;
+
+    var p1 = new Procedure("apiEntity", "Entity", "singleton");
+    p1.addScopeParameter("EntityId", "Id", true);
+    p1.autoexec($scope, function () { window.alert(JSON.stringify($scope.Entity)); });
+
+}]);
+

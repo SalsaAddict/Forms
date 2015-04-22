@@ -1,23 +1,21 @@
 ﻿myApp.service("DataService", ["$http", "$log", "$localStorage", "$location", "$modal", function ($http, $log, $localStorage, $location, $modal) {
-    this.Execute = function (Name, Parameters, ReturnsXML, success, error) {
+    this.Execute = function (Name, Parameters, success, error) {
         var JWT = $localStorage.$default({ JWT: null }).JWT;
-        var NVArray = [], XML = null;
+        var paramArray = []
         angular.forEach(Parameters, function (value, key) {
             if (value) {
                 var XML = angular.isObject(value);
-                NVArray.push({ Name: key, Value: value, XML: XML });
+                paramArray.push({ Name: key, Value: value, XML: XML });
             };
         });
-        return $http.post("exec.ashx?rx=" + ((ReturnsXML === true) ? "true" : "false"), {
+        return $http.post("exec.ashx", {
             JWT: JWT,
             Name: Name,
-            Parameters: NVArray,
-            XML: XML
+            Parameters: paramArray
         })
             .success(function (response) { if (angular.isFunction(success)) success(response); })
             .error(function (response, status) {
                 $log.error(status + ":" + response);
-                $localStorage.JWT = null;
                 var messageBox = $modal.open({
                     templateUrl: "/messageBox.html",
                     controller: "MessageBoxController",
@@ -40,7 +38,10 @@
                 })
                 .result.then(function (result) {
                     if (angular.isFunction(error)) error(response);
-                    if (status == 401) $location.path("/login");
+                    if (status == 401) {
+                        $localStorage.JWT = null;
+                        $location.path("/login");
+                    }
                 });
             });
     };
@@ -67,15 +68,19 @@ myApp.directive("mgController", ["DataService", function () {
                 var o = mgProcs[name], parameters = {}, shouldExecute = true;
                 angular.forEach(o.parameters, function (item) {
                     var value = null;
-                    switch (item.type) {
-                        case "scope": value = $parse(item.value)($scope); break;
-                        case "route": value = $routeParams[item.value]; break;
-                        default: value = item.value; break;
-                    };
-                    if (item.required === true && angular.isUndefined(value))
-                        shouldExecute = false;
-                    else
-                        parameters[item.name] = value;
+                    if (angular.lowercase(item.name) === "userid")
+                        parameters["UserId"] = "UserId";
+                    else {
+                        switch (angular.lowercase(item.type)) {
+                            case "scope": value = $parse(item.value)($scope); break;
+                            case "route": value = $routeParams[item.value]; break;
+                            default: value = item.value; break;
+                        };
+                        if (item.required === true && angular.isUndefined(value))
+                            shouldExecute = false;
+                        else
+                            parameters[item.name] = value;
+                    }
                 });
                 if (shouldExecute === true) {
                     $log.debug("mgController:Execute:" + name);
