@@ -8,25 +8,27 @@
 
             var self = this; self.config = { name: config.name, parameters: [] };
 
+            this.addParameter = function (item) {
+                if (!item.name) { $log.error("procedure:" + config.name + ":parameter:" + parameterIndex + ":required:name:ignored") }
+                else {
+                    var parameter = { name: item.name };
+                    switch ((item.type) ? item.type.trim().toLowerCase() : "") {
+                        case "route": parameter.type = "route"; break;
+                        case "scope": parameter.type = "scope"; break;
+                        default: parameter.type = "value"; break;
+                    };
+                    if (parameter.type === "value")
+                        parameter.value = (item.value) ? item.value : null;
+                    else
+                        parameter.value = (item.value) ? item.value : item.name;
+                    parameter.required = (item.required) ? !(item.required.toString().trim().toLowerCase() !== "true") : false;
+                    self.config.parameters.push(parameter);
+                };
+            };
+
             if (angular.isArray(config.parameters)) {
                 var parameterIndex = 0;
-                angular.forEach(config.parameters, function (item) {
-                    if (!item.name) { $log.error("procedure:" + config.name + ":parameter:" + parameterIndex + ":required:name:ignored") }
-                    else {
-                        var parameter = { name: item.name };
-                        switch ((item.type) ? item.type.trim().toLowerCase() : "") {
-                            case "route": parameter.type = "route"; break;
-                            case "scope": parameter.type = "scope"; break;
-                            default: parameter.type = "value"; break;
-                        };
-                        if (parameter.type === "value")
-                            parameter.value = (item.value) ? item.value : null;
-                        else
-                            parameter.value = (item.value) ? item.value : item.name;
-                        parameter.required = (item.required) ? !(item.required.toString().trim().toLowerCase() !== "true") : false;
-                        self.config.parameters.push(parameter);
-                    };
-                });
+                angular.forEach(config.parameters, function (item) { self.addParameter(item); });
             };
 
             self.config.userId = (config.userId) ? !(config.userId.toString().trim().toLowerCase() !== "true") : false;

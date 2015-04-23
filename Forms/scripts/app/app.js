@@ -50,10 +50,32 @@ myApp.controller("EntitiesController", ["$scope", "procedure", function ($scope,
 
 myApp.controller("EntityController", ["$scope", "procedure", "$routeParams", "$location", function ($scope, procedure, $routeParams, $location) {
 
+    var action = ($routeParams.EntityId) ? "Update" : "Insert";
+    var apiSave = new procedure({
+        name: "apiEntity" + action,
+        parameters: [
+            { name: "Name", type: "scope", value: "Entity.Name" },
+            { name: "Address", type: "scope", value: "Entity.Address" },
+            { name: "PostalCode", type: "scope", value: "Entity.PostalCode" },
+            { name: "CountryId", type: "scope", value: "Entity.CountryId" }
+        ],
+        type: "array",
+        model: "Entity"
+    });
+    window.alert(JSON.stringify(apiSave.postData()));
+
     var apiEntity = new procedure({ name: "apiEntity", parameters: [{ name: "EntityId", type: "route", required: true }], type: "singleton", model: "Entity" });
     apiEntity.execute($scope);
 
-    var apiEntityTypes = new procedure({ name: "apiEntityTypes", type: "array", model: "Types" });
+    var apiEntityTypes = new procedure({
+        name: "apiEntityTypes", type: "array", model: "Types",
+        success: function (data) {
+            angular.forEach(data, function (item) {
+                apiSave.addParameter({ name: item.Code, type: "scope", value: "Entity." + item.code });
+            });
+            window.alert(JSON.stringify(apiSave.postData()));
+        }
+    });
     apiEntityTypes.execute($scope);
 
     var apiCountries = new procedure({ name: "apiCountries", type: "array", model: "Countries" });
