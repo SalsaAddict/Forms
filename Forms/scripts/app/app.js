@@ -6,10 +6,10 @@ myApp.config(function ($logProvider, $routeProvider) {
         .when("/login", { caseInsensitiveMatch: true, templateUrl: "views/login.html", controller: "LoginController" })
         .when("/home", { caseInsensitiveMatch: true, templateUrl: "views/home.html" })
         .when("/exec", { caseInsensitiveMatch: true, templateUrl: "views/exec.html" })
-        .when("/entities", { caseInsensitiveMatch: true, templateUrl: "views/entities.html" })
+        .when("/entities", { caseInsensitiveMatch: true, templateUrl: "views/entities.html", controller: "EntitiesController" })
         .when("/entity", { caseInsensitiveMatch: true, templateUrl: "views/entity.html", controller: "EntityController" })
         .when("/entity/:EntityId", { caseInsensitiveMatch: true, templateUrl: "views/entity.html", controller: "EntityController" })
-        .when("/test/:First?/:Second?", { caseInsensitiveMatch: true, templateUrl: "views/test.html", controller: "TestController" })
+        .when("/test/:EntityId?", { caseInsensitiveMatch: true, templateUrl: "views/test.html", controller: "TestController" })
         .otherwise({ redirectTo: "/home" });
 });
 
@@ -41,7 +41,23 @@ myApp.controller("LoginController", ["$scope", "$http", "$localStorage", "$locat
 
 }]);
 
-myApp.controller("EntityController", ["$scope", "$routeParams", "$location", function ($scope, $routeParams, $location) {
+myApp.controller("EntitiesController", ["$scope", "procedure", function ($scope, procedure) {
+
+    var list = new procedure({ name: "apiEntities", type: "array", model: "Entities", });
+    list.execute($scope);
+
+}]);
+
+myApp.controller("EntityController", ["$scope", "procedure", "$routeParams", "$location", function ($scope, procedure, $routeParams, $location) {
+
+    var apiEntity = new procedure({ name: "apiEntity", parameters: [{ name: "EntityId", type: "route", required: true }], type: "singleton", model: "Entity" });
+    apiEntity.execute($scope);
+
+    var apiEntityTypes = new procedure({ name: "apiEntityTypes", type: "array", model: "Types" });
+    apiEntityTypes.execute($scope);
+
+    var apiCountries = new procedure({ name: "apiCountries", type: "array", model: "Countries" });
+    apiCountries.execute($scope);
 
     $scope.inserting = function () { return ($routeParams.EntityId) ? false : true; };
 
@@ -57,14 +73,20 @@ myApp.controller("EntityController", ["$scope", "$routeParams", "$location", fun
 
 }]);
 
-myApp.controller("TestController", ["$scope", "$routeParams", "Procedure", function ($scope, $routeParams, Procedure) {
+myApp.controller("TestController", ["$scope", "$routeParams", "procedure", function ($scope, $routeParams, procedure) {
 
     $scope.routeParams = $routeParams;
     $scope.Id = 1;
 
-    var p1 = new Procedure("apiEntity", "Entity", "singleton");
-    p1.addScopeParameter("EntityId", "Id", true);
-    p1.autoexec($scope, function () { window.alert(JSON.stringify($scope.Entity)); });
+    var p1 = new procedure({
+        name: "apiEntity",
+        parameters: [{ name: "EntityId", type: "scope", value: "Id", required: true }],
+        type: "singleton",
+        model: "Entity",
+        success: function (data) { window.alert(JSON.stringify(data)); },
+        error: function (data, status) { window.alert(status); }
+    });
+    p1.autoexec($scope);
 
 }]);
 

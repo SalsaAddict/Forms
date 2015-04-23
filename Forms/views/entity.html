@@ -1,9 +1,9 @@
 ﻿<mg-controller>
-    <mg-proc name="apiEntity" type="singleton" ng-model="Entity" autoexec="true">
+    <!--<mg-proc name="apiEntity" type="singleton" ng-model="Entity" autoexec="true">
         <mg-proc-param name="EntityId" type="route" value="EntityId" required="true"></mg-proc-param>
-    </mg-proc>
-    <mg-proc name="apiEntityTypes" ng-model="Types" autoexec="true"></mg-proc>
-    <mg-proc name="apiCountries" ng-model="Countries" autoexec="true"></mg-proc>
+    </mg-proc>-->
+    <!--<mg-proc name="apiEntityTypes" ng-model="Types" autoexec="true"></mg-proc>-->
+    <!--<mg-proc name="apiCountries" ng-model="Countries" autoexec="true"></mg-proc>-->
     <mg-proc name="{{saveProc()}}" type="singleton" ng-model="Entity">
         <mg-proc-param name="UserId"></mg-proc-param>
         <mg-proc-param name="Id" type="route" value="EntityId" ng-if="!inserting()"></mg-proc-param>

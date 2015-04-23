@@ -93,6 +93,7 @@
     <Content Include="css\font-awesome.min.css" />
     <Content Include="scripts\app\controls.js" />
     <Content Include="scripts\app\dbController.js" />
+    <Content Include="scripts\app\procedure.js" />
     <Content Include="views\entities.html" />
     <Content Include="views\entity.html" />
     <Content Include="views\exec.html" />
