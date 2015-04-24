@@ -11,7 +11,7 @@
     <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MG</RootNamespace>
+    <RootNamespace>SqlUi</RootNamespace>
     <AssemblyName>Forms</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <UseIISExpress>true</UseIISExpress>
@@ -71,11 +71,9 @@
     <Content Include="fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="fonts\glyphicons-halflings-regular.woff2" />
-    <Content Include="scripts\angular-resource.min.js" />
     <Content Include="scripts\angular-route.min.js.map" />
     <Content Include="scripts\angular.min.js.map" />
     <Content Include="exec.ashx" />
-    <Content Include="scripts\angular-resource.min.js.map" />
     <Content Include="hash.ashx" />
     <Content Include="login.ashx" />
     <None Include="Web.Debug.config">
@@ -91,9 +89,11 @@
     <Content Include="bin\Newtonsoft.Json.xml" />
     <Content Include="css\bootstrap.min.css" />
     <Content Include="css\font-awesome.min.css" />
+    <Content Include="scripts\app\controllers\LoginController.js" />
     <Content Include="scripts\app\controls.js" />
-    <Content Include="scripts\app\dbController.js" />
-    <Content Include="scripts\app\procedure.js" />
+    <Content Include="scripts\app\services\SqlUi.js" />
+    <Content Include="scripts\app\services\SqlUiUtils.js" />
+    <Content Include="scripts\app\services\SqlUiSp.js" />
     <Content Include="views\entities.html" />
     <Content Include="views\entity.html" />
     <Content Include="views\exec.html" />

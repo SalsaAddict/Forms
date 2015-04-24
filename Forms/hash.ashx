@@ -1,1 +1,1 @@
-﻿<%@ WebHandler Language="C#" CodeBehind="hash.ashx.cs" Class="MG.hash" %>
+﻿<%@ WebHandler Language="C#" CodeBehind="hash.ashx.cs" Class="SqlUi.hash" %>

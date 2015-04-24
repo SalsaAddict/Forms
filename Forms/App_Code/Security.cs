@@ -4,7 +4,7 @@ using System.Web.Configuration;
 using JWT;
 using Newtonsoft.Json;
 
-namespace MG
+namespace SqlUi
 {
 
     public class Payload

@@ -1,7 +1,7 @@
 ﻿var myApp = angular.module("myApp", ["ngRoute", "ngStorage", "ui.bootstrap"]);
 
 myApp.config(function ($logProvider, $routeProvider) {
-    $logProvider.debugEnabled(true);
+    $logProvider.debugEnabled(false);
     $routeProvider
         .when("/login", { caseInsensitiveMatch: true, templateUrl: "views/login.html", controller: "LoginController" })
         .when("/home", { caseInsensitiveMatch: true, templateUrl: "views/home.html" })
@@ -13,48 +13,25 @@ myApp.config(function ($logProvider, $routeProvider) {
         .otherwise({ redirectTo: "/home" });
 });
 
-myApp.controller("MainController", ["$scope", "$localStorage", "$location", function ($scope, $localStorage, $location) {
-    $scope.navBarCollapsed = true;
-    $scope.loggedIn = function () { return ($localStorage.JWT) ? true : false; };
-    $scope.logout = function () { $localStorage.JWT = null; $location.path("/login"); };
+myApp.run(["$rootScope", "$localStorage", "$location", function ($rootScope, $localStorage, $location) {
+    $rootScope.navBarCollapsed = true;
+    $rootScope.loggedIn = function () { return ($localStorage.JWT) ? true : false; };
+    $rootScope.logout = $rootScope.login = function () { $localStorage.JWT = null; $location.path("/login"); };
 }]);
 
-myApp.controller("LoginController", ["$scope", "$http", "$localStorage", "$location", function ($scope, $http, $localStorage, $location) {
+myApp.controller("EntitiesController", ["$scope", "SqlUi", function ($scope, SqlUi) {
 
-    $scope.failed = false;
-    $scope.$local = $localStorage.$default({ JWT: null, email: null });
-    $scope.password = null;
-
-    $scope.login = function () {
-        $http.post("login.ashx", { Email: $scope.$local.email, Password: $scope.password })
-            .success(function (response) {
-                if (response.Validated) {
-                    $scope.$local.JWT = response.JWT;
-                    $location.path("/home");
-                }
-                else {
-                    $scope.failed = true;
-                    $scope.$local.JWT = null;
-                };
-            });
-    };
-
-}]);
-
-myApp.controller("EntitiesController", ["$scope", "procedure", function ($scope, procedure) {
-
-    var list = new procedure({ name: "apiEntities", type: "array", model: "Entities", });
+    var list = SqlUi.StoredProcedure({ name: "apiEntities", type: "array", model: "Entities", });
     list.execute($scope);
 
 }]);
 
-myApp.controller("EntityController", ["$scope", "procedure", "$routeParams", "$location", function ($scope, procedure, $routeParams, $location) {
+myApp.controller("EntityController", ["$scope", "SqlUi", "$routeParams", "$location", function ($scope, SqlUi, $routeParams, $location) {
 
-    var action = ($routeParams.EntityId) ? "Update" : "Insert";
-    var apiSave = new procedure({
-        name: "apiEntity" + action,
+    var apiSave = SqlUi.StoredProcedure({
+        name: "apiEntity" + ($routeParams.EntityId) ? "Update" : "Insert",
         parameters: [
-            { name: "Name", type: "scope", value: "Entity.Name" },
+            { name: "Name", type: "scope", value: "Entity.Name", required: true },
             { name: "Address", type: "scope", value: "Entity.Address" },
             { name: "PostalCode", type: "scope", value: "Entity.PostalCode" },
             { name: "CountryId", type: "scope", value: "Entity.CountryId" }
@@ -62,23 +39,18 @@ myApp.controller("EntityController", ["$scope", "procedure", "$routeParams", "$l
         type: "array",
         model: "Entity"
     });
-    window.alert(JSON.stringify(apiSave.postData()));
+    if ($routeParams.EntityId) apiSave.addParameter({ name: "EntityId", type: "route", required: true });
 
-    var apiEntity = new procedure({ name: "apiEntity", parameters: [{ name: "EntityId", type: "route", required: true }], type: "singleton", model: "Entity" });
+    var apiEntity = SqlUi.StoredProcedure({ name: "apiEntity", parameters: [{ name: "EntityId", type: "route", required: true }], type: "singleton", model: "Entity" });
     apiEntity.execute($scope);
 
-    var apiEntityTypes = new procedure({
+    var apiEntityTypes = SqlUi.StoredProcedure({
         name: "apiEntityTypes", type: "array", model: "Types",
-        success: function (data) {
-            angular.forEach(data, function (item) {
-                apiSave.addParameter({ name: item.Code, type: "scope", value: "Entity." + item.code });
-            });
-            window.alert(JSON.stringify(apiSave.postData()));
-        }
+        success: function (data) { angular.forEach(data, function (item) { apiSave.addParameter({ name: item.Code, type: "scope", value: "Entity." + item.Code }); }); }
     });
     apiEntityTypes.execute($scope);
 
-    var apiCountries = new procedure({ name: "apiCountries", type: "array", model: "Countries" });
+    var apiCountries = SqlUi.StoredProcedure({ name: "apiCountries", type: "array", model: "Countries" });
     apiCountries.execute($scope);
 
     $scope.inserting = function () { return ($routeParams.EntityId) ? false : true; };
@@ -95,20 +67,9 @@ myApp.controller("EntityController", ["$scope", "procedure", "$routeParams", "$l
 
 }]);
 
-myApp.controller("TestController", ["$scope", "$routeParams", "procedure", function ($scope, $routeParams, procedure) {
+myApp.controller("TestController", ["$scope", "$routeParams", "SqlUi", function ($scope, $routeParams, SqlUi) {
 
-    $scope.routeParams = $routeParams;
-    $scope.Id = 1;
-
-    var p1 = new procedure({
-        name: "apiEntity",
-        parameters: [{ name: "EntityId", type: "scope", value: "Id", required: true }],
-        type: "singleton",
-        model: "Entity",
-        success: function (data) { window.alert(JSON.stringify(data)); },
-        error: function (data, status) { window.alert(status); }
-    });
-    p1.autoexec($scope);
+    window.alert(SqlUi.Boolean(undefined));
 
 }]);
 

@@ -9,7 +9,7 @@ using System.Web;
 using System.Web.Configuration;
 using System.Xml;
 
-namespace MG
+namespace SqlUi
 {
 
     public class exec : IHttpHandler
@@ -39,16 +39,25 @@ namespace MG
             [JsonProperty("Parameters")]
             public List<Parameter> Parameters { get; set; }
 
+            [JsonProperty("UserId")]
+            public bool UserId { get; set; }
+
+            [JsonProperty("Type")]
+            public string Type { get; set; }
+
             public StoredProcedure()
             {
                 this.JWT = null;
                 this.Name = null;
                 this.Parameters = new List<Parameter>();
+                this.UserId = false;
+                this.Type = "execute";
             }
         }
 
-        private void ErrorResponse(HttpContext Context, int StatusCode, string Message)
+        private void ErrorResponse(HttpContext Context, SqlTransaction Transaction, int StatusCode, string Message)
         {
+            Transaction.Rollback();
             Context.Response.Clear();
             Context.Response.ContentType = "text/plain";
             Context.Response.Write(Message);
@@ -74,10 +83,9 @@ namespace MG
                                 Procedure = JsonConvert.DeserializeObject<StoredProcedure>(Reader.ReadToEnd());
                             }
                         }
-                        catch { throw new UnauthorizedAccessException(loginRetry); }
+                        catch { throw new InvalidDataException(); }
 
-                        if (string.IsNullOrWhiteSpace(Procedure.JWT))
-                            throw new UnauthorizedAccessException(loginRetry);
+                        if (string.IsNullOrWhiteSpace(Procedure.JWT)) throw new UnauthorizedAccessException(loginRetry);
 
                         int UserId;
                         try
@@ -108,26 +116,32 @@ namespace MG
                             Command.Transaction = Transaction;
                             Command.CommandType = CommandType.StoredProcedure;
                             Command.CommandText = Procedure.Name;
+                            if (Procedure.UserId) Command.Parameters.AddWithValue("UserId", UserId);
                             foreach (Parameter Parameter in Procedure.Parameters)
                             {
-                                if (Parameter.Name == "UserId")
-                                    Command.Parameters.AddWithValue("UserId", UserId);
-                                else if (Parameter.XML)
-                                    Command.Parameters.AddWithValue(Parameter.Name,
-                                        JsonConvert.DeserializeXmlNode(JsonConvert.SerializeObject(Parameter.Value), null, true).InnerXml);
+                                if (Parameter.XML)
+                                    Command.Parameters.AddWithValue(Parameter.Name, JsonConvert.DeserializeXmlNode(JsonConvert.SerializeObject(Parameter.Value), null, true).InnerXml);
                                 else
                                     Command.Parameters.AddWithValue(Parameter.Name, Parameter.Value);
                             }
-                            using (SqlDataReader Reader = Command.ExecuteReader(CommandBehavior.SingleResult))
+                            string Output;
+                            if (Procedure.Type == "execute")
                             {
-                                string Output;
-                                if (Reader.FieldCount == 1 && Reader.GetDataTypeName(0) == "xml")
+                                Command.ExecuteNonQuery();
+                                Output = string.Empty;
+                            }
+                            else if (Procedure.Type == "object")
+                            {
+                                using (XmlReader Reader = Command.ExecuteXmlReader())
                                 {
                                     XmlDocument Document = new XmlDocument();
-                                    Document.Load(Reader.GetXmlReader(0));
+                                    Document.Load(Reader);
                                     Output = JsonConvert.SerializeXmlNode(Document, Newtonsoft.Json.Formatting.Indented, false);
                                 }
-                                else
+                            }
+                            else
+                            {
+                                using (SqlDataReader Reader = Command.ExecuteReader((Procedure.Type == "singleton") ? CommandBehavior.SingleRow : CommandBehavior.SingleResult))
                                 {
                                     using (DataTable Table = new DataTable())
                                     {
@@ -135,22 +149,16 @@ namespace MG
                                         Output = JsonConvert.SerializeObject(Table, Newtonsoft.Json.Formatting.Indented);
                                     }
                                 }
-                                Context.Response.ContentType = "text/json";
-                                Context.Response.Write(Output);
                             }
+                            Context.Response.ContentType = "text/json";
+                            Context.Response.Write(Output);
                         }
                         Transaction.Commit();
                     }
-                    catch (UnauthorizedAccessException ex)
-                    {
-                        Transaction.Rollback();
-                        ErrorResponse(Context, 401, ex.Message);
-                    }
-                    catch (Exception ex)
-                    {
-                        Transaction.Rollback();
-                        ErrorResponse(Context, 400, ex.Message);
-                    }
+                    catch (InvalidDataException ex) { ErrorResponse(Context, Transaction, 400, "Invalid data."); }
+                    catch (UnauthorizedAccessException ex) { ErrorResponse(Context, Transaction, 401, ex.Message); }
+                    catch (SqlException ex) { ErrorResponse(Context, Transaction, 531, ex.Message); }
+                    catch (Exception ex) { ErrorResponse(Context, Transaction, 500, ex.Message); }
                 }
                 Connection.Close();
             }

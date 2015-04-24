@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="css/font-awesome.min.css" />
     <link rel="stylesheet" href="css/mg.css" />
 </head>
-<body style="padding-top: 80px" ng-controller="MainController">
+<body style="padding-top: 80px">
     <nav class="navbar navbar-default navbar-fixed-top">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -29,49 +29,27 @@
             </div>
             <div class="collapse navbar-collapse" collapse="navBarCollapsed">
                 <ul class="nav navbar-nav" ng-show="loggedIn()">
-                    <li>
-                        <a href="#/home">Home</a>
-                    </li>
-                    <li>
-                        <a href="#/entities">Entities</a>
-                    </li>
+                    <li><a href="#/home">Home</a></li>
+                    <li><a href="#/entities">Entities</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li ng-hide="loggedIn()">
-                        <a href="#/login">Login</a>
-                    </li>
-                    <li ng-show="loggedIn()">
-                        <a href ng-click="logout()">Logout</a>
-                    </li>
+                    <li ng-hide="loggedIn()"><a href ng-click="login()">Login</a></li>
+                    <li ng-show="loggedIn()"><a href ng-click="logout()">Logout</a></li>
                 </ul>
 
             </div>
         </div>
     </nav>
-    <div class="container">
-        <ng-view></ng-view>
-    </div>
+    <div class="container"><ng-view></ng-view></div>
     <script src="scripts/angular.min.js"></script>
     <script src="scripts/angular-route.min.js"></script>
-    <script src="scripts/angular-resource.min.js"></script>
     <script src="scripts/ngStorage.min.js"></script>
     <script src="scripts/ui-bootstrap-tpls-0.12.1.min.js"></script>
     <script src="scripts/app/app.js"></script>
     <script src="scripts/app/controls.js"></script>
-    <script src="scripts/app/procedure.js"></script>
-    <script type="text/ng-template" id="/messageBox.html">
-        <div class="modal-header">
-            <h4>
-                <i class="fa fa-exclamation-triangle text-danger"></i>
-                {{heading}}
-            </h4>
-        </div>
-        <div class="modal-body">
-            <p>{{message}}</p>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-primary mg-form-button" ng-click="close()">{{buttonText || 'OK'}}</button>
-        </div>
-    </script>
+    <script src="scripts/app/services/SqlUi.js"></script>
+    <script src="scripts/app/services/SqlUiUtils.js"></script>
+    <script src="scripts/app/services/SqlUiSp.js"></script>
+    <script src="scripts/app/controllers/LoginController.js"></script>
 </body>
 </html>

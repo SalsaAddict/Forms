@@ -1,1 +1,1 @@
-﻿<%@ WebHandler Language="C#" CodeBehind="login.ashx.cs" Class="MG.login" %>
+﻿<%@ WebHandler Language="C#" CodeBehind="login.ashx.cs" Class="SqlUi.login" %>

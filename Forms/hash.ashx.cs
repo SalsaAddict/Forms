@@ -1,6 +1,6 @@
 ﻿using System.Web;
 
-namespace MG
+namespace SqlUi
 {
 
     public class hash : IHttpHandler

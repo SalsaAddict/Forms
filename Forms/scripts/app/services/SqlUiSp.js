@@ -1,7 +1,7 @@
-﻿myApp.factory("procedure", ["$log", "$parse", "$localStorage", "$routeParams", "$http",
-    function ($log, $parse, $localStorage, $routeParams, $http) {
+﻿myApp.factory("SqlUiSp", ["$log", "$parse", "$localStorage", "$routeParams", "$http", "SqlUiUtils",
+    function ($log, $parse, $localStorage, $routeParams, $http, SqlUiUtils) {
 
-        function procedure(config) {
+        function SqlUiSp(config) {
 
             if (!config) { $log.error("procedure:required:config"); return; };
             if (!config.name) { $log.error("procedure:required:name"); return; };
@@ -9,14 +9,10 @@
             var self = this; self.config = { name: config.name, parameters: [] };
 
             this.addParameter = function (item) {
-                if (!item.name) { $log.error("procedure:" + config.name + ":parameter:" + parameterIndex + ":required:name:ignored") }
+                if (!item.name) { $log.error("procedure:" + config.name + ":required:name:ignored") }
                 else {
                     var parameter = { name: item.name };
-                    switch ((item.type) ? item.type.trim().toLowerCase() : "") {
-                        case "route": parameter.type = "route"; break;
-                        case "scope": parameter.type = "scope"; break;
-                        default: parameter.type = "value"; break;
-                    };
+                    parameter.type = angular.lowercase(SqlUiUtils.ifBlank(item.type, "value", ["route", "scope"]));
                     if (parameter.type === "value")
                         parameter.value = (item.value) ? item.value : null;
                     else
@@ -26,19 +22,11 @@
                 };
             };
 
-            if (angular.isArray(config.parameters)) {
-                var parameterIndex = 0;
-                angular.forEach(config.parameters, function (item) { self.addParameter(item); });
-            };
+            if (angular.isArray(config.parameters)) { angular.forEach(config.parameters, function (item) { self.addParameter(item); }); };
 
-            self.config.userId = (config.userId) ? !(config.userId.toString().trim().toLowerCase() !== "true") : false;
+            self.config.userId = SqlUiUtils.Boolean(self.config.userId);
 
-            switch ((config.type) ? config.type.trim().toLowerCase() : "") {
-                case "array": self.config.type = "array"; break;
-                case "singleton": self.config.type = "singleton"; break;
-                case "object": self.config.type = "object"; break;
-                default: self.config.type = "execute"; break;
-            };
+            self.config.type = SqlUiUtils.IfBlank(config.type, "execute", ["array", "singleton", "object"]);
 
             if (self.config.type === "execute") self.config.model = null;
             else self.config.model = (config.model) ? config.model : self.config.name;
@@ -86,16 +74,10 @@
                             if (angular.isFunction(model)) {
                                 var value = null;
                                 if (angular.isArray(data)) {
-                                    switch (self.config.type) {
-                                        case "array": value = data; break;
-                                        default: value = data[0]; break;
-                                    };
+                                    switch (self.config.type) { case "array": value = data; break; default: value = data[0]; break; };
                                 }
                                 else if (angular.isObject(data)) {
-                                    switch (self.config.type) {
-                                        case "array": value = [data]; break;
-                                        default: value = data; break;
-                                    };
+                                    switch (self.config.type) { case "array": value = [data]; break; default: value = data; break; };
                                 };
                                 if (value) model.assign(scope, value);
                             };
@@ -109,23 +91,19 @@
                 else {
                     $log.debug("procedure:" + self.config.name + ":execute:missingdata");
                     if (angular.isFunction(self.config.error)) self.config.error((angular.isFunction(model)) ? model(scope) : null, -1);
-                }
+                };
 
             };
 
             this.autoexec = function (scope) {
                 self.execute(scope);
                 angular.forEach(self.config.parameters, function (item) {
-                    if (item.type === "scope") {
-                        scope.$watch(item.value, function (newValue, oldValue) {
-                            if (newValue !== oldValue) { self.execute(scope); }
-                        });
-                    };
+                    if (item.type === "scope") { scope.$watch(item.value, function (newValue, oldValue) { if (newValue !== oldValue) { self.execute(scope); } }); };
                 });
             };
 
         };
 
-        return procedure;
+        return SqlUiSp;
 
     }]);

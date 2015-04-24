@@ -7,7 +7,7 @@ using System.Text;
 using System.Web;
 using System.Web.Configuration;
 
-namespace MG
+namespace SqlUi
 {
 
     public class login : IHttpHandler
