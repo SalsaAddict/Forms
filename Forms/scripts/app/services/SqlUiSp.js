@@ -12,7 +12,7 @@
                 if (!item.name) { $log.error("procedure:" + config.name + ":required:name:ignored") }
                 else {
                     var parameter = { name: item.name };
-                    parameter.type = angular.lowercase(SqlUiUtils.ifBlank(item.type, "value", ["route", "scope"]));
+                    parameter.type = angular.lowercase(SqlUiUtils.IfBlank(item.type, "value", ["route", "scope"]));
                     if (parameter.type === "value")
                         parameter.value = (item.value) ? item.value : null;
                     else
@@ -68,6 +68,7 @@
 
                 var postData = self.postData(scope);
                 if (postData) {
+                    $log.debug(JSON.stringify(postData));
                     $http.post("exec.ashx", postData)
                         .success(function (data) {
                             $log.debug("procedure:" + self.config.name + ":execute:success");

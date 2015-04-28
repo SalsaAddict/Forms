@@ -2,7 +2,7 @@
 
     var self = this;
 
-    this.ifBlank = function (value, defaultValue, allowedValues) {
+    this.IfBlank = function (value, defaultValue, allowedValues) {
         if (!value) return defaultValue;
         else if (!angular.isArray(allowedValues)) return value;
         else {
@@ -12,8 +12,8 @@
         };
     };
 
-    this.boolean = function (value) {
-        var bvalue = self.ifBlank(value, "false", ["true", "1", "yes"]).toString().trim().toLowerCase();
+    this.Boolean = function (value) {
+        var bvalue = self.IfBlank(value, "false", ["true", "1", "yes"]).toString().trim().toLowerCase();
         return (bvalue === "false") ? false : true;
     };
 

@@ -1,21 +1,4 @@
 ﻿<mg-controller>
-    <!--<mg-proc name="apiEntity" type="singleton" ng-model="Entity" autoexec="true">
-        <mg-proc-param name="EntityId" type="route" value="EntityId" required="true"></mg-proc-param>
-    </mg-proc>-->
-    <!--<mg-proc name="apiEntityTypes" ng-model="Types" autoexec="true"></mg-proc>-->
-    <!--<mg-proc name="apiCountries" ng-model="Countries" autoexec="true"></mg-proc>-->
-    <mg-proc name="{{saveProc()}}" type="singleton" ng-model="Entity">
-        <mg-proc-param name="UserId"></mg-proc-param>
-        <mg-proc-param name="Id" type="route" value="EntityId" ng-if="!inserting()"></mg-proc-param>
-        <mg-proc-param name="Name" type="scope" value="Entity.Name"></mg-proc-param>
-        <mg-proc-param name="Address" type="scope" value="Entity.Address"></mg-proc-param>
-        <mg-proc-param name="PostalCode" type="scope" value="Entity.PostalCode"></mg-proc-param>
-        <mg-proc-param name="CountryId" type="scope" value="Entity.CountryId"></mg-proc-param>
-        <mg-proc-param name="{{Type.Code}}" type="scope" value="Entity.{{Type.Code}}" ng-repeat="Type in Types"></mg-proc-param>
-    </mg-proc>
-    <mg-proc name="apiEntityDelete">
-        <mg-proc-param name="Id" type="route" value="EntityId"></mg-proc-param>
-    </mg-proc>
     <mg-form name="EntityForm" heading="{{Entity.Name || 'New Entity'}}" back="/entities" save-proc="{{saveProc()}}" delete-proc="apiEntityDelete">
         <mg-field for="Name" text="Name">
             <input type="text" ng-model="Entity.Name" mg-control required />

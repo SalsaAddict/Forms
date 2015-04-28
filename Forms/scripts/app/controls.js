@@ -170,7 +170,7 @@ myApp.directive("mgForm", ["$window", "$location", "$route", function ($window, 
         require: "^^mgController",
         templateUrl: "controls/mgForm.html",
         transclude: true,
-        scope: { name: "@", heading: "@", backRoute: "@back", saveProc: "@", deleteProc: "@", success: "=", error: "=" },
+        scope: { name: "@", heading: "@", backRoute: "@back", save:" },
         controller: function ($scope) {
             this.form = $scope.form = function () { return $scope[$scope.name]; };
             $scope.editable = ($scope.saveProc) ? true : false;

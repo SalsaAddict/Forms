@@ -1,7 +1,7 @@
 ﻿myApp.service("SqlUi", ["$log", "SqlUiUtils", "SqlUiSp", "$modal", function ($log, SqlUiUtils, SqlUiSp, $modal) {
 
-    this.IfBlank = SqlUiUtils.ifBlank;
-    this.Boolean = SqlUiUtils.boolean;
+    this.IfBlank = SqlUiUtils.IfBlank;
+    this.Boolean = SqlUiUtils.Boolean;
 
     this.StoredProcedure = function (config) { return new SqlUiSp(config); };
 
